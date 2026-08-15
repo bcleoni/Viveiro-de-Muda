@@ -157,9 +157,9 @@
     background:var(--paper);
     border:1px solid var(--line);
     border-radius:12px;
-    overflow:hidden;
+    overflow-x:auto;
   }
-  table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  table{width:100%;min-width:520px;border-collapse:collapse;font-size:13.5px;}
   thead th{
     text-align:left;
     font-size:11.5px;
@@ -958,7 +958,8 @@ function renderInteresse(){
   applySort(list, 'interesse');
 
   const jaTemCount = list.filter(i=>i.tem).length;
-  document.getElementById('interesseTotal').textContent = `${fmtNum(list.length)} espécie(s) — ${fmtNum(jaTemCount)} já no estoque`;
+  const totalMudas = list.reduce((s,i)=>s+(i.tem?i.qtde:0),0);
+  document.getElementById('interesseTotal').textContent = `${fmtNum(list.length)} espécie(s) — ${fmtNum(jaTemCount)} já no estoque — ${fmtNum(totalMudas)} mudas`;
 
   const body = document.getElementById('interesseBody');
   if(list.length===0){
