@@ -1,0 +1,1320 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerencial Viveiro</title>
+<meta property="og:title" content="Gerencial Viveiro">
+<meta property="og:description" content="Controle de estoque de mudas do viveiro.">
+<meta name="description" content="Controle de estoque de mudas do viveiro.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --forest:#26402F;
+    --forest-light:#3C5C46;
+    --moss:#E9EEE5;
+    --moss-line:#D3DBC9;
+    --clay:#B9713B;
+    --clay-light:#F2E2D0;
+    --clay-dark:#8A5228;
+    --bark:#5B4636;
+    --cream:#FAF8F3;
+    --paper:#FFFFFF;
+    --ink:#22281F;
+    --ink-soft:#5A6355;
+    --ink-faint:#8D9585;
+    --line:#E4E0D3;
+    --danger:#A3372E;
+    --danger-bg:#F7E7E4;
+    --success:#3B7A47;
+    --success-bg:#E6EFE3;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Inter',system-ui,sans-serif;
+    background:var(--cream);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.display{
+    font-family:'Fraunces',serif;
+    font-weight:500;
+    letter-spacing:-0.01em;
+    color:var(--forest);
+    margin:0;
+  }
+  .app{max-width:1080px;margin:0 auto;padding:28px 20px 64px;}
+
+  /* Header */
+  .hero{
+    background:var(--forest);
+    color:#F2F3EE;
+    padding:36px 20px 32px;
+    position:relative;
+    overflow:hidden;
+  }
+  .hero::before{
+    content:"";
+    position:absolute;
+    right:-40px; top:-60px;
+    width:280px; height:280px;
+    border-radius:50%;
+    background:radial-gradient(circle at 30% 30%, rgba(185,113,59,0.35), transparent 70%);
+  }
+  .hero-inner{max-width:1080px;margin:0 auto;position:relative;}
+  .hero-eyebrow{
+    font-size:12px;
+    letter-spacing:0.09em;
+    text-transform:uppercase;
+    color:#B7C7B2;
+    margin-bottom:6px;
+  }
+  .hero h1{color:#FBF9F3;font-size:30px;}
+  .hero-sub{color:#C6D2C0;font-size:14.5px;margin-top:6px;max-width:520px;line-height:1.55;}
+
+  /* Summary cards */
+  .summary{
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+    margin-top:26px;
+    position:relative;
+    z-index:2;
+  }
+  .summary-group-title{
+    font-size:11.5px;
+    font-weight:600;
+    letter-spacing:0.07em;
+    text-transform:uppercase;
+    color:#9FB097;
+    margin-bottom:8px;
+  }
+  .summary-row{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+    gap:12px;
+  }
+  .metric{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:16px 18px;
+    box-shadow:0 10px 24px rgba(38,64,47,0.08);
+  }
+  .metric-label{font-size:12px;color:var(--ink-faint);margin-bottom:6px;}
+  .metric-value{font-family:'Fraunces',serif;font-size:26px;font-weight:500;color:var(--forest);}
+  .metric-value.clay{color:var(--clay-dark);}
+
+  /* Nav tabs */
+  .tabs{
+    display:flex;
+    gap:4px;
+    margin:32px 0 22px;
+    border-bottom:1px solid var(--line);
+    overflow-x:auto;
+  }
+  .tab{
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+    font-weight:500;
+    color:var(--ink-soft);
+    background:none;
+    border:none;
+    padding:10px 14px;
+    cursor:pointer;
+    border-bottom:2px solid transparent;
+    white-space:nowrap;
+  }
+  .tab.active{color:var(--forest);border-bottom-color:var(--clay);}
+  .tab:hover:not(.active){color:var(--forest);}
+
+  .panel{display:none;}
+  .panel.active{display:block;}
+
+  /* Toolbar */
+  .toolbar{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    align-items:center;
+    margin-bottom:16px;
+  }
+  .toolbar input[type="text"], .toolbar select, select, input[type="text"], input[type="number"], input[type="date"]{
+    font-family:'Inter',sans-serif;
+    font-size:13.5px;
+    padding:9px 12px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    background:var(--paper);
+    color:var(--ink);
+  }
+  .toolbar input[type="text"]{min-width:200px;flex:1;}
+  label{font-size:12.5px;color:var(--ink-soft);font-weight:500;display:block;margin-bottom:5px;}
+
+  /* Table */
+  .table-wrap{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:12px;
+    overflow-x:auto;
+  }
+  table{width:100%;min-width:520px;border-collapse:collapse;font-size:13.5px;}
+  thead th{
+    text-align:left;
+    font-size:11.5px;
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+    color:var(--ink-faint);
+    background:var(--moss);
+    padding:10px 14px;
+    border-bottom:1px solid var(--moss-line);
+    font-weight:600;
+    position:sticky;
+    top:0;
+  }
+  th.sortable{cursor:pointer;user-select:none;}
+  th.sortable:hover{color:var(--forest);}
+  .sort-arrow{display:inline-block;width:10px;margin-left:3px;font-size:10px;}
+  th.sort-active{color:var(--forest);}
+  tbody td{
+    padding:10px 14px;
+    border-bottom:1px solid var(--line);
+    color:var(--ink);
+  }
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:hover{background:#FBFAF6;}
+  td.num, th.num{text-align:right;font-variant-numeric:tabular-nums;}
+  .badge{
+    display:inline-block;
+    font-size:11.5px;
+    font-weight:600;
+    padding:3px 9px;
+    border-radius:100px;
+  }
+  .badge.entrada{background:var(--success-bg);color:var(--success);}
+  .badge.saida{background:var(--danger-bg);color:var(--danger);}
+  .empty-row td{text-align:center;color:var(--ink-faint);padding:32px;}
+
+  /* Form */
+  .form-card{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:22px 24px;
+    max-width:520px;
+  }
+  .form-row{margin-bottom:16px;}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .evento-toggle{display:flex;gap:8px;}
+  .evento-btn{
+    flex:1;
+    padding:10px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    background:var(--paper);
+    font-family:'Inter',sans-serif;
+    font-size:13.5px;
+    font-weight:600;
+    cursor:pointer;
+    color:var(--ink-soft);
+  }
+  .evento-btn.sel-entrada{border-color:var(--success);background:var(--success-bg);color:var(--success);}
+  .evento-btn.sel-saida{border-color:var(--danger);background:var(--danger-bg);color:var(--danger);}
+  input, select{width:100%;}
+  .btn{
+    font-family:'Inter',sans-serif;
+    font-size:13.5px;
+    font-weight:600;
+    padding:10px 18px;
+    border-radius:8px;
+    border:1px solid var(--forest);
+    background:var(--forest);
+    color:#fff;
+    cursor:pointer;
+  }
+  .btn:hover{background:var(--forest-light);}
+  .btn.secondary{background:var(--paper);color:var(--forest);border-color:var(--line);}
+  .btn.secondary:hover{background:var(--moss);}
+  .error-text{font-size:12.5px;color:var(--danger);margin-top:5px;display:none;}
+  .hint{font-size:12.5px;color:var(--ink-faint);margin-top:10px;}
+  .list-total{font-size:12.5px;color:var(--ink-soft);margin:-6px 0 14px;font-weight:500;display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+  .subtotal-wrap{display:flex;flex-wrap:wrap;gap:8px;margin:-4px 0 14px;}
+  .subtotal-chip{
+    font-size:12px;
+    background:var(--moss);
+    border:1px solid var(--moss-line);
+    color:var(--ink-soft);
+    padding:5px 10px;
+    border-radius:100px;
+  }
+  .subtotal-chip b{color:var(--forest);font-weight:600;}
+  .toast{
+    position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+    background:var(--forest);color:#fff;padding:10px 20px;border-radius:8px;
+    font-size:13.5px;font-weight:500;
+    opacity:0;pointer-events:none;transition:opacity .25s;
+    z-index:50;
+  }
+  .toast.show{opacity:1;}
+
+  .section-title{font-size:18px;margin-bottom:14px;}
+  .venda-group{margin-bottom:22px;}
+  .venda-group-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    margin-bottom:8px;
+  }
+  .venda-group-date{
+    font-family:'Fraunces',serif;
+    font-size:16px;
+    font-weight:500;
+    color:var(--forest);
+  }
+  .venda-group-total{
+    font-size:13px;
+    font-weight:600;
+    color:var(--clay-dark);
+  }
+  .row-flex{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;}
+  datalist{}
+  ::placeholder{color:var(--ink-faint);}
+  @media (max-width:600px){
+    .form-grid{grid-template-columns:1fr;}
+    .hero h1{font-size:24px;}
+    .metric-value{font-size:21px;}
+  }
+
+  .print-header{display:none;}
+  @media print{
+    .no-print{display:none !important;}
+    .hero{display:none !important;}
+    .tabs{display:none !important;}
+    .toolbar select, .toolbar input{display:none !important;}
+    .app{padding:0;max-width:100%;}
+    body{background:#fff;}
+    .print-header{
+      display:block;
+      font-family:'Fraunces',serif;
+      font-size:18px;
+      font-weight:500;
+      color:var(--forest);
+      margin-bottom:4mm;
+      padding:0 0 3mm;
+      border-bottom:2px solid var(--forest);
+    }
+    .table-wrap{border:none;box-shadow:none;}
+    thead th{position:static;}
+    .venda-group{break-inside:avoid;}
+  }
+</style>
+</head>
+<body>
+<div class="print-header" id="printHeader"></div>
+
+<div class="hero">
+  <div class="hero-inner">
+    <h1 id="heroTitle">Gerencial Viveiro</h1>
+    <div class="summary" id="summaryCards"></div>
+  </div>
+</div>
+
+<div class="app">
+  <div class="tabs" id="tabs">
+    <button class="tab" data-tab="especies">Espécies</button>
+    <button class="tab active" data-tab="estoque">Estoque</button>
+    <button class="tab" data-tab="interesse">Hotlist</button>
+    <button class="tab" data-tab="movimentacoes">Movimentações</button>
+    <button class="tab" data-tab="vendas">Vendas</button>
+    <button class="tab" data-tab="nativas">Espécies Nativas</button>
+  </div>
+
+  <!-- ESTOQUE ATUAL -->
+  <div class="panel active" id="panel-estoque">
+    <div class="toolbar">
+      <input type="text" id="estoqueBusca" placeholder="Buscar espécie...">
+      <div>
+        <label style="margin-bottom:0;display:inline;">Sítio</label>
+        <select id="estoqueFiltroSitio" style="width:auto;"></select>
+      </div>
+      <div>
+        <label style="margin-bottom:0;display:inline;">Lote</label>
+        <select id="estoqueFiltroLote" style="width:auto;"></select>
+      </div>
+      <button class="btn secondary no-print" onclick="exportarPDF('Estoque')">Exportar PDF</button>
+    </div>
+    <div class="list-total" id="estoqueTotal"></div>
+    <div id="estoqueGroups"></div>
+  </div>
+
+  <!-- MOVIMENTAÇÕES -->
+  <div class="panel" id="panel-movimentacoes">
+    <div class="toolbar">
+      <input type="text" id="movBusca" placeholder="Buscar espécie...">
+      <select id="movFiltroEvento" style="width:auto;">
+        <option value="">Todos eventos</option>
+        <option value="Entrada">Entrada</option>
+        <option value="Saída">Saída</option>
+      </select>
+      <button class="btn secondary no-print" onclick="exportarPDF('Movimentações')">Exportar PDF</button>
+    </div>
+    <div class="list-total" id="movTotal"></div>
+    <div id="movSubtotais" class="subtotal-wrap"></div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="sortable" data-table="mov" data-key="data">Data<span class="sort-arrow"></span></th>
+            <th class="sortable" data-table="mov" data-key="evento">Evento<span class="sort-arrow"></span></th>
+            <th class="sortable" data-table="mov" data-key="especie">Espécie<span class="sort-arrow"></span></th>
+            <th class="sortable" data-table="mov" data-key="sitio">Sítio<span class="sort-arrow"></span></th>
+            <th class="sortable" data-table="mov" data-key="lote">Lote<span class="sort-arrow"></span></th>
+            <th class="num sortable" data-table="mov" data-key="qtde">Qtde<span class="sort-arrow"></span></th>
+          </tr>
+        </thead>
+        <tbody id="movBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ESPÉCIES -->
+  <div class="panel" id="panel-especies">
+    <div class="toolbar">
+      <input type="text" id="espBusca" placeholder="Buscar espécie...">
+      <div>
+        <label style="margin-bottom:0;display:inline;">Sítio</label>
+        <select id="espFiltroSitio" style="width:auto;"></select>
+      </div>
+      <div>
+        <label style="margin-bottom:0;display:inline;">Lote</label>
+        <select id="espFiltroLote" style="width:auto;"></select>
+      </div>
+      <button class="btn secondary no-print" onclick="exportarPDF('Espécies')">Exportar PDF</button>
+    </div>
+    <div class="list-total" id="espTotal"></div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="sortable" data-table="esp" data-key="especie">Espécie<span class="sort-arrow"></span></th>
+            <th class="num sortable" data-table="esp" data-key="qtde">Estoque<span class="sort-arrow"></span></th>
+            <th class="num sortable" data-table="esp" data-key="sitios">Sítio<span class="sort-arrow"></span></th>
+            <th class="num sortable" data-table="esp" data-key="lotes">Lote<span class="sort-arrow"></span></th>
+          </tr>
+        </thead>
+        <tbody id="espBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- LISTA DE INTERESSE MANEQUINHO -->
+  <div class="panel" id="panel-interesse">
+    <div class="toolbar">
+      <input type="text" id="interesseBusca" placeholder="Buscar espécie...">
+      <select id="interesseFiltroStatus" style="width:auto;">
+        <option value="">Todas</option>
+        <option value="tem">Já no estoque</option>
+        <option value="nao">Ainda não temos</option>
+      </select>
+      <button class="btn secondary no-print" onclick="exportarPDF('Hotlist')">Exportar PDF</button>
+    </div>
+    <div class="list-total" id="interesseTotal"></div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="sortable" data-table="interesse" data-key="comum">Nome popular<span class="sort-arrow"></span></th>
+            <th class="sortable" data-table="interesse" data-key="cientifico">Nome científico<span class="sort-arrow"></span></th>
+            <th>Status</th>
+            <th class="num sortable" data-table="interesse" data-key="qtde">#Mudas em Estoque<span class="sort-arrow"></span></th>
+          </tr>
+        </thead>
+        <tbody id="interesseBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- VENDAS -->
+  <div class="panel" id="panel-vendas">
+    <div class="toolbar">
+      <input type="text" id="vendasBusca" placeholder="Buscar espécie...">
+      <div>
+        <label style="margin-bottom:0;display:inline;">Comprador</label>
+        <select id="vendasFiltroComprador" style="width:auto;"></select>
+      </div>
+      <div>
+        <label style="margin-bottom:0;display:inline;">Data</label>
+        <select id="vendasFiltroData" style="width:auto;"></select>
+      </div>
+      <button class="btn secondary no-print" onclick="exportarPDF('Vendas')">Exportar PDF</button>
+    </div>
+    <div class="summary" style="margin-top:0;margin-bottom:16px;">
+      <div class="summary-row">
+        <div class="metric">
+          <div class="metric-label">Total vendido</div>
+          <div class="metric-value" id="vendasTotalMudas">0</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Vendas registradas</div>
+          <div class="metric-value" id="vendasTotalRegistros">0</div>
+        </div>
+      </div>
+    </div>
+    <div id="vendasGroups"></div>
+  </div>
+
+  <!-- LISTA DE ESPÉCIES NATIVA_MUNICIPIO -->
+  <div class="panel" id="panel-nativas">
+    <div class="toolbar">
+      <input type="text" id="nativasBusca" placeholder="Buscar por espécie, nome popular ou família...">
+      <button class="btn secondary no-print" onclick="exportarPDF('Espécies Nativas')">Exportar PDF</button>
+    </div>
+    <div class="list-total" id="nativasTotal"></div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="sortable" data-table="nativas" data-key="familia">Família<span class="sort-arrow"></span></th>
+            <th class="sortable" data-table="nativas" data-key="cientifico">Nome científico<span class="sort-arrow"></span></th>
+            <th>Sinônimo</th>
+            <th class="sortable" data-table="nativas" data-key="popular">Nome popular<span class="sort-arrow"></span></th>
+          </tr>
+        </thead>
+        <tbody id="nativasBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const STORAGE_KEY = 'movimentacoes';
+const SEED = [{"evento": "Entrada", "especie": "MIRINDIBA", "qtde": 1, "sitio": "1", "lote": "1", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "PAU VIOLA", "qtde": 38, "sitio": "1", "lote": "1", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "ALBIZIA", "qtde": 90, "sitio": "1", "lote": "1", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "CANAFÍSTULA", "qtde": 90, "sitio": "1", "lote": "1", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "PAU JACARE", "qtde": 100, "sitio": "1", "lote": "1", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "BABOSA", "qtde": 143, "sitio": "1", "lote": "1", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "INGÁ BRANCO", "qtde": 149, "sitio": "1", "lote": "1", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "CHAU CHAU", "qtde": 150, "sitio": "1", "lote": "1", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "CANUDO DE PITO", "qtde": 151, "sitio": "1", "lote": "1", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "ACASSIA VERMELHA", "qtde": 152, "sitio": "1", "lote": "1", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "INGÁ FEIJÃO", "qtde": 359, "sitio": "1", "lote": "1", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "RESEDÁ", "qtde": 406, "sitio": "1", "lote": "1", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "SANGRA D'AGUA", "qtde": 1, "sitio": "1", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "CORESMEIRA", "qtde": 5, "sitio": "1", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "BABOSA", "qtde": 6, "sitio": "1", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "ALBIZIA", "qtde": 14, "sitio": "1", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "CAROBA", "qtde": 36, "sitio": "1", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "EMBAÚBA", "qtde": 38, "sitio": "1", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "GUARANTÃ", "qtde": 51, "sitio": "1", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "JEQUITIBÁ", "qtde": 90, "sitio": "1", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "CAPIXINGUI", "qtde": 96, "sitio": "1", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "CAMBARÁ", "qtde": 99, "sitio": "1", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "GUAPURUVU", "qtde": 100, "sitio": "1", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "JACARANDÁ MIMOSO", "qtde": 100, "sitio": "1", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "TAMBORIL", "qtde": 101, "sitio": "1", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "PAU JANGADA", "qtde": 102, "sitio": "1", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "AROEIRA PIMENTEIRA", "qtde": 103, "sitio": "1", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "URUCUM", "qtde": 103, "sitio": "1", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "PAU FORMIGA", "qtde": 104, "sitio": "1", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "PAU FERRO", "qtde": 106, "sitio": "1", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "RESEDÁ", "qtde": 121, "sitio": "1", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "MIRINDIBA", "qtde": 122, "sitio": "1", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "ÁRVORE FOLHA LARGA", "qtde": 149, "sitio": "1", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "CANAFÍSTULA", "qtde": 331, "sitio": "1", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "CAMBARÁ", "qtde": 1, "sitio": "1", "lote": "3", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "PAU FORMIGA", "qtde": 1, "sitio": "1", "lote": "3", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "INGÁ BRANCO", "qtde": 1, "sitio": "1", "lote": "3", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "CORESMEIRA", "qtde": 2, "sitio": "1", "lote": "3", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "INGÁ FEIJÃO", "qtde": 3, "sitio": "1", "lote": "3", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "CAPOROROCA", "qtde": 3, "sitio": "1", "lote": "3", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "IPÊ ROXO", "qtde": 84, "sitio": "1", "lote": "3", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "IPÊ BRANCO", "qtde": 87, "sitio": "1", "lote": "3", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "ACOITA CAVALO", "qtde": 101, "sitio": "1", "lote": "3", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "MIRINDIBA", "qtde": 144, "sitio": "1", "lote": "3", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "IPÊ VERDE", "qtde": 152, "sitio": "1", "lote": "3", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "IPÊ AMARELO", "qtde": 291, "sitio": "1", "lote": "3", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "PAU MULATO", "qtde": 619, "sitio": "1", "lote": "3", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "ACEROLA", "qtde": 2, "sitio": "1", "lote": "4", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "CAMBUCA", "qtde": 51, "sitio": "1", "lote": "4", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "GABIROBA", "qtde": 268, "sitio": "1", "lote": "4", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "PITANGA", "qtde": 468, "sitio": "1", "lote": "4", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "IPÊ AMARELO", "qtde": 6, "sitio": "1", "lote": "5", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "PAU VIOLA", "qtde": 31, "sitio": "1", "lote": "5", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "PITANGA", "qtde": 34, "sitio": "1", "lote": "5", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "GOIABA", "qtde": 77, "sitio": "1", "lote": "5", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "SANGRA D'AGUA", "qtde": 125, "sitio": "1", "lote": "5", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "JACARANDÁ CAROBA", "qtde": 150, "sitio": "1", "lote": "5", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "FALSO BARBATIMÃO", "qtde": 151, "sitio": "1", "lote": "5", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "PAINEIRA", "qtde": 152, "sitio": "1", "lote": "5", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "JEQUITIBÁ", "qtde": 200, "sitio": "1", "lote": "5", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "PAU BRASIL", "qtde": 251, "sitio": "1", "lote": "5", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "AROEIRA PIMENTEIRA", "qtde": 291, "sitio": "1", "lote": "5", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "ACASSIA", "qtde": 300, "sitio": "1", "lote": "5", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "ACASSIA JAVANICA", "qtde": 300, "sitio": "1", "lote": "5", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "PAU FORMIGA", "qtde": 301, "sitio": "1", "lote": "5", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "JACARANDÁ MIMOSO", "qtde": 301, "sitio": "1", "lote": "5", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "CANAFÍSTULA", "qtde": 305, "sitio": "1", "lote": "5", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "CAPOROROCA", "qtde": 311, "sitio": "1", "lote": "5", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "DEDALEIRO", "qtde": 317, "sitio": "1", "lote": "5", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "FLAMBOIÃ ARVORE", "qtde": 322, "sitio": "1", "lote": "5", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "MIRINDIBA", "qtde": 370, "sitio": "1", "lote": "5", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "PAU FERRO", "qtde": 96, "sitio": "2", "lote": "1", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "IPÊ BRANCO", "qtde": 1440, "sitio": "2", "lote": "1", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "PATA DE VACA", "qtde": 6, "sitio": "2", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "TAMBORIL", "qtde": 100, "sitio": "2", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "ERETRINA", "qtde": 100, "sitio": "2", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "ALGODOEIRO", "qtde": 123, "sitio": "2", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "EMBAÚBA", "qtde": 158, "sitio": "2", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "IPÊ ROXO", "qtde": 200, "sitio": "2", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "JACARANDÁ", "qtde": 201, "sitio": "2", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "ANGICO", "qtde": 209, "sitio": "2", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "PAU VIOLA", "qtde": 231, "sitio": "2", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "INGÁ", "qtde": 250, "sitio": "2", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "JEQUITIBÁ", "qtde": 300, "sitio": "2", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "IPÊ BRANCO", "qtde": 800, "sitio": "2", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "PAINEIRA", "qtde": 100, "sitio": "2", "lote": "3", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "DEDALEIRO", "qtde": 103, "sitio": "2", "lote": "3", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "CALISTEMO", "qtde": 205, "sitio": "2", "lote": "3", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "IPÊ ROSA", "qtde": 297, "sitio": "2", "lote": "3", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "IPÊ ROXO", "qtde": 677, "sitio": "2", "lote": "3", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "IPÊ AMARELO", "qtde": 967, "sitio": "2", "lote": "3", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "PATA DE VACA", "qtde": 969, "sitio": "2", "lote": "3", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "RESEDÁ", "qtde": 300, "sitio": "Área de acesso", "lote": "Área de acesso", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "GABIROBA", "qtde": 100, "sitio": "3", "lote": "1", "data": "01/08/2026"}, {"evento": "Entrada", "especie": "ACEROLA", "qtde": 200, "sitio": "3", "lote": "1", "data": "01/08/2026"}, {"evento": "Entrada", "especie": "CABELUDINHA", "qtde": 213, "sitio": "3", "lote": "1", "data": "01/08/2026"}, {"evento": "Entrada", "especie": "CEREJA DO RIO GRANDE", "qtde": 57, "sitio": "3", "lote": "2", "data": "01/08/2026"}, {"evento": "Entrada", "especie": "CABELUDINHA", "qtde": 81, "sitio": "3", "lote": "2", "data": "01/08/2026"}, {"evento": "Entrada", "especie": "IPÊ AMARELO DE JARDIM", "qtde": 92, "sitio": "3", "lote": "2", "data": "01/08/2026"}, {"evento": "Entrada", "especie": "ANGICO VERMELHO", "qtde": 100, "sitio": "3", "lote": "2", "data": "01/08/2026"}, {"evento": "Entrada", "especie": "ARAÇÁ AMARELO", "qtde": 200, "sitio": "3", "lote": "2", "data": "01/08/2026"}, {"evento": "Entrada", "especie": "PAU REI", "qtde": 71, "sitio": "3", "lote": "3", "data": "01/08/2026"}, {"evento": "Entrada", "especie": "OTIL", "qtde": 101, "sitio": "3", "lote": "3", "data": "01/08/2026"}, {"evento": "Entrada", "especie": "IPÊ DE JARDIM", "qtde": 106, "sitio": "3", "lote": "3", "data": "01/08/2026"}, {"evento": "Entrada", "especie": "ARAÇÁ BOI", "qtde": 100, "sitio": "3", "lote": "4", "data": "01/08/2026"}, {"evento": "Entrada", "especie": "CEREJA", "qtde": 100, "sitio": "3", "lote": "4", "data": "01/08/2026"}, {"evento": "Entrada", "especie": "ARAÇÁ ROXO", "qtde": 100, "sitio": "3", "lote": "5", "data": "01/08/2026"}, {"evento": "Entrada", "especie": "ARAÇÁ VERMELHO", "qtde": 100, "sitio": "3", "lote": "5", "data": "01/08/2026"}, {"evento": "Entrada", "especie": "AMORA", "qtde": 152, "sitio": "3", "lote": "5", "data": "01/08/2026"}, {"evento": "Entrada", "especie": "GOIABA", "qtde": 209, "sitio": "3", "lote": "5", "data": "01/08/2026"}, {"evento": "Saída", "especie": "ACOITA CAVALO", "qtde": -40, "sitio": "1", "lote": "3", "data": "30/07/2026", "comprador": "Dioni Maranhão", "precoUnitario": 120, "pago": false}, {"evento": "Saída", "especie": "GUAPURUVU", "qtde": -26, "sitio": "1", "lote": "2", "data": "30/07/2026", "comprador": "Dioni Maranhão", "precoUnitario": 120, "pago": false}, {"evento": "Saída", "especie": "ACASSIA VERMELHA", "qtde": -25, "sitio": "1", "lote": "1", "data": "01/07/2026", "comprador": "Dioni Maranhão", "precoUnitario": 120, "pago": false}, {"evento": "Saída", "especie": "EMBAÚBA", "qtde": -15, "sitio": "1", "lote": "2", "data": "01/07/2026", "comprador": "Dioni Maranhão", "precoUnitario": 120, "pago": false}, {"evento": "Saída", "especie": "TAMBORIL", "qtde": -15, "sitio": "1", "lote": "2", "data": "01/07/2026", "comprador": "Dioni Maranhão", "precoUnitario": 120, "pago": false}];
+const INTERESSE = [{"comum": "Abiu", "cientifico": "Pouteria caimito", "norm": "abiu"}, {"comum": "Açoita-cavalo", "cientifico": "Luehea candicans", "norm": "acoitacavalo"}, {"comum": "Amendoim-do-campo", "cientifico": "Platypodium elegans", "norm": "amendoimdocampo"}, {"comum": "Angelim-da-folha-grande", "cientifico": "Andira fraxinifolia", "norm": "angelimdafolhagrande"}, {"comum": "Angico", "cientifico": "Anadenanthera sp.", "norm": "angico"}, {"comum": "Araucária", "cientifico": "Araucaria angustifolia", "norm": "araucaria"}, {"comum": "Araçá", "cientifico": "Psidium cattleyanum (MF)", "norm": "araca"}, {"comum": "Araçá-roxo", "cientifico": "Psidium myrtoides (MF)", "norm": "aracaroxo"}, {"comum": "Araribá", "cientifico": "Centrolobium tomentosum", "norm": "arariba"}, {"comum": "Aroeira-salsa", "cientifico": "Schinus molle", "norm": "aroeirasalsa"}, {"comum": "Aroeira-pimenteira", "cientifico": "", "norm": "aroeirapimenteira"}, {"comum": "Aroeira-branca", "cientifico": "Lithraea molleoides", "norm": "aroeirabranca"}, {"comum": "Aroeira-vermelha", "cientifico": "Astronium fraxinifolium", "norm": "aroeiravermelha"}, {"comum": "Araçá-Amarelo (MF)", "cientifico": "", "norm": "aracaamarelomf"}, {"comum": "Araçá-piranga (MF)", "cientifico": "", "norm": "aracapirangamf"}, {"comum": "Araçá-roxo", "cientifico": "Psidium myrtoides", "norm": "aracaroxo"}, {"comum": "Babosa-branca", "cientifico": "Cordia superba", "norm": "babosabranca"}, {"comum": "Bacupari", "cientifico": "Garcinia gardneiana (MF)", "norm": "bacupari"}, {"comum": "Baru", "cientifico": "Dipteryx alata", "norm": "baru"}, {"comum": "Bracaatinga", "cientifico": "Mimosa scabrella", "norm": "bracaatinga"}, {"comum": "Bico-de-papagaio", "cientifico": "Erythrina falcata", "norm": "bicodepapagaio"}, {"comum": "Branquilho", "cientifico": "Gymnanthes klotzschiana", "norm": "branquilho"}, {"comum": "Cabeludinha", "cientifico": "Myrciaria glazioviana (MF)", "norm": "cabeludinha"}, {"comum": "Cabreúva", "cientifico": "Myroxylon peruiferum", "norm": "cabreuva"}, {"comum": "Café-de-bugre", "cientifico": "Cordia ecalyculata", "norm": "cafedebugre"}, {"comum": "Cambucá", "cientifico": "Plinia edulis (MF)", "norm": "cambuca"}, {"comum": "Cambuci", "cientifico": "Campomanesia phaea", "norm": "cambuci"}, {"comum": "Camu-camu", "cientifico": "Myrciaria dubia", "norm": "camucamu"}, {"comum": "Canela-amarela", "cientifico": "Nectandra lanceolata", "norm": "canelaamarela"}, {"comum": "Carobinha", "cientifico": "Jacaranda puberula", "norm": "carobinha"}, {"comum": "Cereja-roxa", "cientifico": "Eugenia candolleana (MF)", "norm": "cerejaroxa"}, {"comum": "Cereja-do-Rio-Grande", "cientifico": "Eugenia involucrata (MF)", "norm": "cerejadoriogrande"}, {"comum": "Chal-chal", "cientifico": "Allophylus edulis", "norm": "chalchal"}, {"comum": "Chichá", "cientifico": "Sterculia curiosa", "norm": "chicha"}, {"comum": "Chuva-de-ouro", "cientifico": "Cassia ferruginea", "norm": "chuvadeouro"}, {"comum": "Copaíba", "cientifico": "Copaifera langsdorffii", "norm": "copaiba"}, {"comum": "Coração-de-negro", "cientifico": "Poecilanthe parviflora", "norm": "coracaodenegro"}, {"comum": "Dedaleiro", "cientifico": "Lafoensia pacari", "norm": "dedaleiro"}, {"comum": "Embira-de-sapo", "cientifico": "Dahlstedtia muehlbergiana", "norm": "embiradesapo"}, {"comum": "Eritrina-verna", "cientifico": "Erythrina verna", "norm": "eritrinaverna"}, {"comum": "Eritrina-falcata", "cientifico": "", "norm": "eritrinafalcata"}, {"comum": "Farinha-seca", "cientifico": "Albizia niopoides", "norm": "farinhaseca"}, {"comum": "Guabiju", "cientifico": "Myrcianthes pungens", "norm": "guabiju"}, {"comum": "Guabiroba-branca", "cientifico": "Campomanesia neriiflora", "norm": "guabirobabranca"}, {"comum": "Guaçatonga", "cientifico": "Casearia sylvestris", "norm": "guacatonga"}, {"comum": "Guajuvira", "cientifico": "Cordia americana", "norm": "guajuvira"}, {"comum": "Guamirim", "cientifico": "Myrcia splendens", "norm": "guamirim"}, {"comum": "Guanandi", "cientifico": "Calophyllum brasiliense (DAP 3)", "norm": "guanandi"}, {"comum": "Guaperê", "cientifico": "Lamanonia ternata", "norm": "guapere"}, {"comum": "Guaraiuva", "cientifico": "Savia dictyocarpa", "norm": "guaraiuva"}, {"comum": "Guaritá", "cientifico": "Astronium graveolens", "norm": "guarita"}, {"comum": "Guarantã", "cientifico": "Esenbeckia leiocarpa", "norm": "guaranta"}, {"comum": "Guatambu", "cientifico": "Aspidosperma ramiflorum", "norm": "guatambu"}, {"comum": "Guabiroba-branca", "cientifico": "Campomanesia neriiflora", "norm": "guabirobabranca"}, {"comum": "Guaxupita", "cientifico": "Esenbeckia grandiflora", "norm": "guaxupita"}, {"comum": "Guariroba", "cientifico": "Syagrus oleracea", "norm": "guariroba"}, {"comum": "Goiaba-serrana", "cientifico": "Acca sellowiana", "norm": "goiabaserrana"}, {"comum": "Ingá-ferradura", "cientifico": "Inga sessilis", "norm": "ingaferradura"}, {"comum": "Ingarana", "cientifico": "Zygia latifolia", "norm": "ingarana"}, {"comum": "Indaiá", "cientifico": "Attalea dubia", "norm": "indaia"}, {"comum": "Ingá", "cientifico": "Inga vera", "norm": "inga"}, {"comum": "Ingá-feijão", "cientifico": "Inga marginata", "norm": "ingafeijao"}, {"comum": "Ipê-amarelo", "cientifico": "Handroanthus chrysotrichus", "norm": "ipeamarelo"}, {"comum": "Ipê-amarelo-da-serra", "cientifico": "Handroanthus albus", "norm": "ipeamarelodaserra"}, {"comum": "Ipê-amarelo-do-cerrado", "cientifico": "Tabebuia ochracea", "norm": "ipeamarelodocerrado"}, {"comum": "Ipê-cascudo", "cientifico": "Handroanthus vellosoi", "norm": "ipecascudo"}, {"comum": "Ipê-tabaco", "cientifico": "Zeyheria tuberculosa", "norm": "ipetabaco"}, {"comum": "Ipê-verde", "cientifico": "Cybistax antisyphilitica", "norm": "ipeverde"}, {"comum": "Ipê-roxo-de-bola", "cientifico": "Handroanthus impetiginosus", "norm": "iperoxodebola"}, {"comum": "Jabuticaba", "cientifico": "Myrciaria cauliflora", "norm": "jabuticaba"}, {"comum": "Jacarandá-de-espinho", "cientifico": "Machaerium hirtum", "norm": "jacarandadeespinho"}, {"comum": "Jacarandá-do-campo", "cientifico": "Machaerium acutifolium", "norm": "jacarandadocampo"}, {"comum": "Jacarandá-da-bahia", "cientifico": "Dalbergia nigra", "norm": "jacarandadabahia"}, {"comum": "Jacarandá-ferro", "cientifico": "Machaerium scleroxylon", "norm": "jacarandaferro"}, {"comum": "Jaracatiá", "cientifico": "Jacaratia spinosa", "norm": "jaracatia"}, {"comum": "Jatobá", "cientifico": "Hymenaea courbaril", "norm": "jatoba"}, {"comum": "Jerivá", "cientifico": "Syagrus romanzoffiana", "norm": "jeriva"}, {"comum": "Leiteiro", "cientifico": "Sapium glandulosum", "norm": "leiteiro"}, {"comum": "Licurana", "cientifico": "Hyeronima alchorneoides", "norm": "licurana"}, {"comum": "Lixeira", "cientifico": "Aloysia virgata", "norm": "lixeira"}, {"comum": "Manacá-da-serra", "cientifico": "Pleroma mutabile", "norm": "manacadaserra"}, {"comum": "Louro-pardo", "cientifico": "Cordia trichotoma", "norm": "louropardo"}, {"comum": "Manduirana", "cientifico": "Senna macranthera", "norm": "manduirana"}, {"comum": "Monguba", "cientifico": "Pachira aquatica", "norm": "monguba"}, {"comum": "Maria-mole / embirutó", "cientifico": "Dendropanax cuneatus", "norm": "mariamoleembiruto"}, {"comum": "Maria-preta", "cientifico": "Diatenopteryx sorbifolia", "norm": "mariapreta"}, {"comum": "Maricá", "cientifico": "Mimosa bimucronata", "norm": "marica"}, {"comum": "Marinheiro", "cientifico": "Guarea guidonia", "norm": "marinheiro"}, {"comum": "Oiti", "cientifico": "Moquilea tomentosa", "norm": "oiti"}, {"comum": "Palmito-jussara", "cientifico": "Euterpe edulis", "norm": "palmitojussara"}, {"comum": "Pata de vaca", "cientifico": "Bauhinia variegata", "norm": "patadevaca"}, {"comum": "Pau-brasil", "cientifico": "Paubrasilia echinata", "norm": "paubrasil"}, {"comum": "Pau-cigarra", "cientifico": "Senna multijuga", "norm": "paucigarra"}, {"comum": "Pau-de-rosas", "cientifico": "Physocalymma scaberrimum", "norm": "pauderosas"}, {"comum": "Pau-jacaré", "cientifico": "Piptadenia gonoacantha", "norm": "paujacare"}, {"comum": "Pau-viola", "cientifico": "Citharexylum myrianthum", "norm": "pauviola"}, {"comum": "Pitomba", "cientifico": "Eugenia luschnathiana (MF)", "norm": "pitomba"}, {"comum": "Pixirica", "cientifico": "Miconia sp.", "norm": "pixirica"}, {"comum": "Pêssego-do-mato", "cientifico": "Eugenia myrcianthes (MF)", "norm": "pessegodomato"}, {"comum": "Pitanga", "cientifico": "Eugenia uniflora", "norm": "pitanga"}, {"comum": "Pitomba", "cientifico": "Eugenia luschnathiana (MF)", "norm": "pitomba"}, {"comum": "Pupunha", "cientifico": "Bactris gasipaes", "norm": "pupunha"}, {"comum": "Quatinga", "cientifico": "Ouratea parviflora", "norm": "quatinga"}, {"comum": "Sete-cascas", "cientifico": "Samanea tubulosa", "norm": "setecascas"}, {"comum": "Sucupira", "cientifico": "Pterodon emarginatus", "norm": "sucupira"}, {"comum": "Sete-capote", "cientifico": "Campomanesia guazumifolia", "norm": "setecapote"}, {"comum": "Sombreiro", "cientifico": "Clitoria fairchildiana", "norm": "sombreiro"}, {"comum": "Tingui-preto", "cientifico": "Dictyoloma vandellianum", "norm": "tinguipreto"}, {"comum": "Uvaia", "cientifico": "Eugenia pyriformis (MF)", "norm": "uvaia"}, {"comum": "Unha-de-vaca", "cientifico": "Bauhinia longifolia", "norm": "unhadevaca"}, {"comum": "Vassoura", "cientifico": "Baccharis singularis", "norm": "vassoura"}, {"comum": "Vassourão / canela-branca", "cientifico": "Piptocarpha macropoda", "norm": "vassouraocanelabranca"}];
+const NATIVAS = [{"familia": "ANACARDIACEAE", "cientifico": "Astronium graveolens", "sinonimo": "", "popular": "guaritá"}, {"familia": "ANACARDIACEAE", "cientifico": "Lithraea molleoides", "sinonimo": "", "popular": "aroeira-brava"}, {"familia": "ANACARDIACEAE", "cientifico": "Schinus terebinthifolius", "sinonimo": "", "popular": "aroeira-mansa"}, {"familia": "ANACARDIACEAE", "cientifico": "Tapirira guianensis", "sinonimo": "", "popular": "fruta-de-pombo, tapiriri"}, {"familia": "ANNONACEAE", "cientifico": "Annona emarginata", "sinonimo": "", "popular": "araticunzinho"}, {"familia": "ANNONACEAE", "cientifico": "Annona neosericea", "sinonimo": "Rollinia sericea", "popular": "araticum-alvadio, pinha-da-mata"}, {"familia": "ANNONACEAE", "cientifico": "Duguetia lanceolata", "sinonimo": "", "popular": "pindaíba"}, {"familia": "ANNONACEAE", "cientifico": "Guatteria australis", "sinonimo": "", "popular": "pindaíba-preta"}, {"familia": "ANNONACEAE", "cientifico": "Xylopia brasiliensis", "sinonimo": "", "popular": "pindaubuna"}, {"familia": "APOCYNACEAE", "cientifico": "Aspidosperma olivaceum", "sinonimo": "", "popular": "guatambu-mirim"}, {"familia": "APOCYNACEAE", "cientifico": "Aspidosperma polyneuron", "sinonimo": "", "popular": "peroba-rosa"}, {"familia": "APOCYNACEAE", "cientifico": "Aspidosperma ramiflorum", "sinonimo": "", "popular": "guatambu"}, {"familia": "APOCYNACEAE", "cientifico": "Aspidosperma riedelii", "sinonimo": "", "popular": "guatambuzinho"}, {"familia": "APOCYNACEAE", "cientifico": "Tabernaemontana catharinensis", "sinonimo": "", "popular": "leiteiro"}, {"familia": "AQUIFOLIACEAE", "cientifico": "Ilex dumosa", "sinonimo": "Ilex amara", "popular": "caúna"}, {"familia": "ARECACEAE", "cientifico": "Acrocomia aculeata", "sinonimo": "", "popular": "macaúba"}, {"familia": "ARECACEAE", "cientifico": "Euterpe edulis", "sinonimo": "", "popular": "palmito"}, {"familia": "ARECACEAE", "cientifico": "Geonoma schottiana", "sinonimo": "", "popular": "aricanga"}, {"familia": "ARECACEAE", "cientifico": "Lytocaryum hoehnei", "sinonimo": "", "popular": "palmeira-prateada"}, {"familia": "ARECACEAE", "cientifico": "Syagrus romanzoffiiana", "sinonimo": "", "popular": "jerivá"}, {"familia": "ASTERACEAE", "cientifico": "Baccharis singularis", "sinonimo": "Baccharis cassiniifolia", "popular": "vassoura"}, {"familia": "ASTERACEAE", "cientifico": "Gochnatia polymorpha", "sinonimo": "", "popular": "vassourão-branco, cambará"}, {"familia": "ASTERACEAE", "cientifico": "Piptocarpha macropoda", "sinonimo": "", "popular": "vassourão"}, {"familia": "ASTERACEAE", "cientifico": "Vernonanthura discolor", "sinonimo": "Vernonia discolor", "popular": "vassourão-preto"}, {"familia": "BIGNONIACEAE", "cientifico": "Cybistax antisyphilitica", "sinonimo": "", "popular": "ipê-verde"}, {"familia": "BIGNONIACEAE", "cientifico": "Handroanthus chrysotrichus", "sinonimo": "Tabebuia chrysotricha", "popular": "ipê-amarelo"}, {"familia": "BIGNONIACEAE", "cientifico": "Handroanthus heptaphyllus", "sinonimo": "Tabebuia heptaphylla", "popular": "ipê-roxo-de-sete-folhas"}, {"familia": "BIGNONIACEAE", "cientifico": "Handroanthus impetiginosus", "sinonimo": "Tabebuia impetiginosa", "popular": "ipê-roxo-de-bola"}, {"familia": "BIGNONIACEAE", "cientifico": "Handroanthus umbellatus", "sinonimo": "Tabebuia umbellata", "popular": "ipê-amarelo-do-brejo"}, {"familia": "BIGNONIACEAE", "cientifico": "Handroanthus vellosoi", "sinonimo": "Tabebuia vellosoi", "popular": "ipê-amarelo-de-casca-lisa"}, {"familia": "BIGNONIACEAE", "cientifico": "Jacaranda caroba", "sinonimo": "", "popular": "caroba"}, {"familia": "BIGNONIACEAE", "cientifico": "Jacaranda cuspidifolia", "sinonimo": "", "popular": "caroba"}, {"familia": "BIGNONIACEAE", "cientifico": "Jacaranda puberula", "sinonimo": "", "popular": "caroba"}, {"familia": "BORAGINACEAE", "cientifico": "Cordia ecalyculata", "sinonimo": "", "popular": "café-de-bugre"}, {"familia": "BURSERACEAE", "cientifico": "Protium heptaphyllum", "sinonimo": "", "popular": "almecegueira"}, {"familia": "CANELLACEAE", "cientifico": "Cinnamodendron dinisii", "sinonimo": "Capsicodendron dinisii", "popular": "pimenteira"}, {"familia": "CANNABACEAE", "cientifico": "Trema micrantha", "sinonimo": "", "popular": "crindiúva"}, {"familia": "CARICACEAE", "cientifico": "Jacaratia spinosa", "sinonimo": "Jaracatia dodecaphylla", "popular": "jaracatiá"}, {"familia": "CELASTRACEAE", "cientifico": "Maytenus evonymoides", "sinonimo": "", "popular": "cafezinho"}, {"familia": "CELASTRACEAE", "cientifico": "Maytenus robusta", "sinonimo": "Maytenus alaternoides", "popular": "cafezinho"}, {"familia": "CHRYSOBALANACEAE", "cientifico": "Couepia venosa", "sinonimo": "", "popular": "figueira-branca"}, {"familia": "CHRYSOBALANACEAE", "cientifico": "Hirtella hebeclada", "sinonimo": "", "popular": "cinzeiro, macucurana"}, {"familia": "CLETHRACEAE", "cientifico": "Clethra scabra", "sinonimo": "", "popular": "guaperô, carne-de-vaca"}, {"familia": "CLUSIACEAE", "cientifico": "Clusia criuva", "sinonimo": "", "popular": "clúsia"}, {"familia": "CLUSIACEAE", "cientifico": "Garcinia gardneriana", "sinonimo": "", "popular": "bacupari"}, {"familia": "CONNARACEAE", "cientifico": "Connarus rostratus", "sinonimo": "", "popular": "falso-calcanhar-de-cotia"}, {"familia": "CUNONIACEAE", "cientifico": "Lamanonia ternata", "sinonimo": "", "popular": "guaperê"}, {"familia": "ELAEOCARPACEAE", "cientifico": "Sloanea hirsuta", "sinonimo": "Sloanea monosperma", "popular": "sapopemba"}, {"familia": "ERICACEAE", "cientifico": "Gaylussacia brasiliensis", "sinonimo": "", "popular": "camarinha"}, {"familia": "ERYTHROXYLACEAE", "cientifico": "Erythroxylum deciduum", "sinonimo": "", "popular": "fruta-de-pomba"}, {"familia": "EUPHORBIACEAE", "cientifico": "Alchornea sidifolia", "sinonimo": "", "popular": "tapiá-guaçu"}, {"familia": "EUPHORBIACEAE", "cientifico": "Alchornea triplinervia", "sinonimo": "", "popular": "tapiá-mirim"}, {"familia": "EUPHORBIACEAE", "cientifico": "Croton floribundus", "sinonimo": "", "popular": "capixingui"}, {"familia": "EUPHORBIACEAE", "cientifico": "Croton salutaris", "sinonimo": "", "popular": "caixeta"}, {"familia": "EUPHORBIACEAE", "cientifico": "Croton urucurana", "sinonimo": "", "popular": "sangra-d'água"}, {"familia": "EUPHORBIACEAE", "cientifico": "Gymnanthes klotzschiana", "sinonimo": "", "popular": "patereviú"}, {"familia": "FABACEAE", "cientifico": "Andira fraxinifolia", "sinonimo": "", "popular": "angelim-doce, pau-de-morcego"}, {"familia": "FABACEAE", "cientifico": "Bauhinia forficata", "sinonimo": "", "popular": "pata-de-vaca"}, {"familia": "FABACEAE", "cientifico": "Cassia ferruginea", "sinonimo": "", "popular": "chuva-de-ouro"}, {"familia": "FABACEAE", "cientifico": "Cassia leptophylla", "sinonimo": "", "popular": "falso-barbatimão"}, {"familia": "FABACEAE", "cientifico": "Centrolobium tomentosum", "sinonimo": "", "popular": "araribá"}, {"familia": "FABACEAE", "cientifico": "Copaifera langsdorffii", "sinonimo": "", "popular": "copaíba"}, {"familia": "FABACEAE", "cientifico": "Dalbergia villosa", "sinonimo": "", "popular": "canafístula-brava"}, {"familia": "FABACEAE", "cientifico": "Enterolobium contortisiliquum", "sinonimo": "", "popular": "tamboril"}, {"familia": "FABACEAE", "cientifico": "Erythrina crista-galli", "sinonimo": "", "popular": "corticeira"}, {"familia": "FABACEAE", "cientifico": "Erythrina falcata", "sinonimo": "", "popular": "mulungu"}, {"familia": "FABACEAE", "cientifico": "Erythrina speciosa", "sinonimo": "", "popular": "suinã"}, {"familia": "FABACEAE", "cientifico": "Hymenaea courbaril", "sinonimo": "Hymenaea stilbocarpa", "popular": "jatobá"}, {"familia": "FABACEAE", "cientifico": "Inga marginata", "sinonimo": "", "popular": "ingá-feijão"}, {"familia": "FABACEAE", "cientifico": "Inga sessilis", "sinonimo": "", "popular": "ingá-ferradura"}, {"familia": "FABACEAE", "cientifico": "Inga vera", "sinonimo": "Inga uruguensis", "popular": "ingá-do-brejo"}, {"familia": "FABACEAE", "cientifico": "Lonchocarpus muehlbergianus", "sinonimo": "", "popular": "embira-de-sapo"}, {"familia": "FABACEAE", "cientifico": "Machaerium hirtum", "sinonimo": "", "popular": "jacarandá-de-espinho"}, {"familia": "FABACEAE", "cientifico": "Machaerium nyctitans", "sinonimo": "", "popular": "bico-de-pato"}, {"familia": "FABACEAE", "cientifico": "Machaerium stipitatum", "sinonimo": "", "popular": "marmeleiro-do-mato, sapuva"}, {"familia": "FABACEAE", "cientifico": "Machaerium villosum", "sinonimo": "", "popular": "jacarandá-paulista"}, {"familia": "FABACEAE", "cientifico": "Peltophorum dubium", "sinonimo": "", "popular": "faveiro"}, {"familia": "FABACEAE", "cientifico": "Piptadenia gonoacantha", "sinonimo": "", "popular": "pau-jacaré"}, {"familia": "FABACEAE", "cientifico": "Platymiscium floribundum", "sinonimo": "", "popular": "sacambu"}, {"familia": "FABACEAE", "cientifico": "Schizolobium parahyba", "sinonimo": "", "popular": "guapuruvu"}, {"familia": "FABACEAE", "cientifico": "Senna macranthera", "sinonimo": "", "popular": "aleluia"}, {"familia": "FABACEAE", "cientifico": "Senna multijuga", "sinonimo": "", "popular": "pau-cigarra"}, {"familia": "FABACEAE", "cientifico": "Senna pendula", "sinonimo": "Cassia bicapsularis", "popular": "canudo-de-pito"}, {"familia": "FABACEAE", "cientifico": "Tachigali denudata", "sinonimo": "Sclerolobium denudatum", "popular": "passariúva"}, {"familia": "HUMIRIACEAE", "cientifico": "Vantanea compacta", "sinonimo": "", "popular": "guaraparim"}, {"familia": "LAMIACEAE", "cientifico": "Aegiphila integrifolia", "sinonimo": "Aegiphila sellowiana", "popular": "tamanqueiro"}, {"familia": "LAMIACEAE", "cientifico": "Vitex megapotamica", "sinonimo": "", "popular": "tarumã"}, {"familia": "LAMIACEAE", "cientifico": "Vitex polygama", "sinonimo": "", "popular": "tarumã"}, {"familia": "LAURACEAE", "cientifico": "Aiouea saligna", "sinonimo": "", "popular": "canela-anhoíba"}, {"familia": "LAURACEAE", "cientifico": "Cinnamomum stenophyllum", "sinonimo": "", "popular": "canela-vassoura"}, {"familia": "LAURACEAE", "cientifico": "Cryptocarya aschersoniana", "sinonimo": "", "popular": "canela-batalha"}, {"familia": "LAURACEAE", "cientifico": "Cryptocarya moschata", "sinonimo": "", "popular": "canela-batalha"}, {"familia": "LAURACEAE", "cientifico": "Endlicheria paniculata", "sinonimo": "", "popular": "canela-frade"}, {"familia": "LAURACEAE", "cientifico": "Nectandra barbellata", "sinonimo": "", "popular": "canela-parda"}, {"familia": "LAURACEAE", "cientifico": "Nectandra grandiflora", "sinonimo": "", "popular": "canela-sebo"}, {"familia": "LAURACEAE", "cientifico": "Nectandra megapotamica", "sinonimo": "", "popular": "canelinha"}, {"familia": "LAURACEAE", "cientifico": "Nectandra oppositifolia", "sinonimo": "Nectandra rigida", "popular": "canela-amarela, canela-ferrugem"}, {"familia": "LAURACEAE", "cientifico": "Nectandra puberula", "sinonimo": "", "popular": "canela-amarela"}, {"familia": "LAURACEAE", "cientifico": "Ocotea pulchella", "sinonimo": "", "popular": "canela-preta"}, {"familia": "LAURACEAE", "cientifico": "Persea willdenovii", "sinonimo": "Persea pyrifolia", "popular": "abacateiro-do-mato"}, {"familia": "LECYTHIDACEAE", "cientifico": "Cariniana estrellensis", "sinonimo": "", "popular": "jequitibá-branco"}, {"familia": "LECYTHIDACEAE", "cientifico": "Cariniana legalis", "sinonimo": "", "popular": "jequitibá-rosa"}, {"familia": "LYTHRACEAE", "cientifico": "Lafoensia vandelliana", "sinonimo": "Lafoensia replicata", "popular": "dedaleiro"}, {"familia": "MAGNOLIACEAE", "cientifico": "Magnolia ovata", "sinonimo": "Talauma ovata", "popular": "pinha-do-brejo"}, {"familia": "MALPIGHIACEAE", "cientifico": "Byrsonima ligustrifolia", "sinonimo": "", "popular": "murici"}, {"familia": "MALVACEAE", "cientifico": "Apeiba tibourbou", "sinonimo": "", "popular": "pau-jangada"}, {"familia": "MALVACEAE", "cientifico": "Ceiba speciosa", "sinonimo": "Chorisia speciosa", "popular": "paineira"}, {"familia": "MALVACEAE", "cientifico": "Guazuma ulmifolia", "sinonimo": "", "popular": "mutambo"}, {"familia": "MALVACEAE", "cientifico": "Heliocarpus popayanensis", "sinonimo": "Heliocarpus americanus", "popular": "jangada-brava"}, {"familia": "MALVACEAE", "cientifico": "Luehea divaricata", "sinonimo": "", "popular": "açoita-cavalo"}, {"familia": "MALVACEAE", "cientifico": "Luehea grandiflora", "sinonimo": "", "popular": "açoita-cavalo"}, {"familia": "MALVACEAE", "cientifico": "Pseudobombax grandiflorum", "sinonimo": "", "popular": "embiruçu"}, {"familia": "MALVACEAE", "cientifico": "Sterculia curiosa", "sinonimo": "", "popular": "chichá"}, {"familia": "MELASTOMATACEAE", "cientifico": "Huberia semisserrata", "sinonimo": "", "popular": "quaresmeira-branca-do-brejo"}, {"familia": "MELASTOMATACEAE", "cientifico": "Miconia cabucu", "sinonimo": "", "popular": "cabuçu"}, {"familia": "MELASTOMATACEAE", "cientifico": "Miconia cinnamomifolia", "sinonimo": "Miconia candolleana", "popular": "jacatirão"}, {"familia": "MELASTOMATACEAE", "cientifico": "Miconia cubatanensis", "sinonimo": "", "popular": "jacatirão"}, {"familia": "MELASTOMATACEAE", "cientifico": "Miconia ligustroides", "sinonimo": "", "popular": "jacatirão"}, {"familia": "MELASTOMATACEAE", "cientifico": "Miconia valtheri", "sinonimo": "", "popular": ""}, {"familia": "MELASTOMATACEAE", "cientifico": "Tibouchina mutabilis", "sinonimo": "", "popular": "manacá-da-serra"}, {"familia": "MELASTOMATACEAE", "cientifico": "Trembleya parviflora", "sinonimo": "", "popular": ""}, {"familia": "MELIACEAE", "cientifico": "Cabralea canjerana", "sinonimo": "", "popular": "canjerana"}, {"familia": "MELIACEAE", "cientifico": "Cedrela fissilis", "sinonimo": "", "popular": "cedro"}, {"familia": "MELIACEAE", "cientifico": "Guarea guidonia", "sinonimo": "", "popular": "marinheiro"}, {"familia": "MELIACEAE", "cientifico": "Guarea macrophylla", "sinonimo": "Guarea tuberculata", "popular": "marinheiro"}, {"familia": "MELIACEAE", "cientifico": "Trichilia silvatica", "sinonimo": "", "popular": "catiguá"}, {"familia": "MONIMIACEAE", "cientifico": "Mollinedia schottiana", "sinonimo": "", "popular": "guatambu-langanha"}, {"familia": "MORACEAE", "cientifico": "Ficus insipida", "sinonimo": "", "popular": "pigueira-do-brejo"}, {"familia": "MORACEAE", "cientifico": "Ficus luschnathiana", "sinonimo": "Ficus enormis", "popular": "figueira-da-pedra"}, {"familia": "MORACEAE", "cientifico": "Maclura tinctoria", "sinonimo": "", "popular": "tatajuba"}, {"familia": "MORACEAE", "cientifico": "Sorocea bonplandii", "sinonimo": "", "popular": "cega-olho"}, {"familia": "MYRSINACEAE", "cientifico": "Myrsine coriacea", "sinonimo": "Rapanea ferruginea", "popular": "capororoca"}, {"familia": "MYRSINACEAE", "cientifico": "Myrsine guianensis", "sinonimo": "Rapanea guianensis", "popular": "capororoca"}, {"familia": "MYRSINACEAE", "cientifico": "Myrsine umbellata", "sinonimo": "Rapanea umbellata", "popular": "capororoca"}, {"familia": "MYRTACEAE", "cientifico": "Blepharocalyx salicifolius", "sinonimo": "", "popular": "murta-brasileira"}, {"familia": "MYRTACEAE", "cientifico": "Campomanesia eugenioides", "sinonimo": "", "popular": "guaviroba-do-mato"}, {"familia": "MYRTACEAE", "cientifico": "Campomanesia guazumifolia", "sinonimo": "", "popular": "sete-capotes, araçá-do-mato"}, {"familia": "MYRTACEAE", "cientifico": "Campomanesia phaea", "sinonimo": "Paivaea langsdorffii", "popular": "cambuci"}, {"familia": "MYRTACEAE", "cientifico": "Campomanesia xanthocarpa", "sinonimo": "", "popular": "guabiroba"}, {"familia": "MYRTACEAE", "cientifico": "Eugenia brasiliensis", "sinonimo": "", "popular": "grumixama"}, {"familia": "MYRTACEAE", "cientifico": "Eugenia cerasiflora", "sinonimo": "", "popular": "guamirim"}, {"familia": "MYRTACEAE", "cientifico": "Myrcia splendens", "sinonimo": "Myrcia fallax; M. rostrata", "popular": "guamirim"}, {"familia": "MYRTACEAE", "cientifico": "Myrcia tijucensis", "sinonimo": "Gomidesia tijucensis", "popular": "guamirim-ferro"}, {"familia": "MYRTACEAE", "cientifico": "Myrcia tomentosa", "sinonimo": "", "popular": "goiaba-brava"}, {"familia": "MYRTACEAE", "cientifico": "Myrciaria floribunda", "sinonimo": "", "popular": "cambuí"}, {"familia": "MYRTACEAE", "cientifico": "Pimenta pseudocaryophyllus", "sinonimo": "", "popular": "louro-cravo"}, {"familia": "MYRTACEAE", "cientifico": "Plinia cauliflora", "sinonimo": "Myrciaria cauliflora", "popular": "jabuticabeira"}, {"familia": "MYRTACEAE", "cientifico": "Plinia edulis", "sinonimo": "Marlierea edulis", "popular": "cambucá"}, {"familia": "MYRTACEAE", "cientifico": "Psidium cattleianum", "sinonimo": "", "popular": "araçá"}, {"familia": "MYRTACEAE", "cientifico": "Psidium guajava", "sinonimo": "", "popular": "goiabeira"}, {"familia": "NYCTAGINACEAE", "cientifico": "Guapira opposita", "sinonimo": "", "popular": "maria-mole, flor-de-pérola"}, {"familia": "OCHNACEAE", "cientifico": "Ouratea parviflora", "sinonimo": "", "popular": "guatinga"}, {"familia": "OLACACEAE", "cientifico": "Heisteria silvianii", "sinonimo": "", "popular": "casco-de-tatu"}, {"familia": "OLEACEAE", "cientifico": "Chionanthus trichotomus", "sinonimo": "", "popular": "limoeiro-do-mato"}, {"familia": "PERACEAE", "cientifico": "Pera glabrata", "sinonimo": "Pera obovata", "popular": "tamanqueira"}, {"familia": "PHYLLANTHACEAE", "cientifico": "Savia dictyocarpa", "sinonimo": "Securinega guaraiuva", "popular": "guaraiúva"}, {"familia": "PHYTOLACCACEAE", "cientifico": "Phytolacca dioica", "sinonimo": "", "popular": "ceboleira"}, {"familia": "PHYTOLACCACEAE", "cientifico": "Seguieria langsdorffii", "sinonimo": "", "popular": "limoeiro-do-mato, agulheiro"}, {"familia": "PODOCARPACEAE", "cientifico": "Podocarpus sellowii", "sinonimo": "", "popular": "pinheiro-bravo"}, {"familia": "POLYGONACEAE", "cientifico": "Coccoloba warmingii", "sinonimo": "", "popular": "cocoloba"}, {"familia": "PROTEACEAE", "cientifico": "Euplassa cantareirae", "sinonimo": "", "popular": "cavalho-brasileiro"}, {"familia": "ROSACEAE", "cientifico": "Prunus myrtifolia", "sinonimo": "Prunus sellowii", "popular": "bravo"}, {"familia": "RUBIACEAE", "cientifico": "Amaioua intermedia", "sinonimo": "", "popular": "marmelada"}, {"familia": "RUBIACEAE", "cientifico": "Bathysa australis", "sinonimo": "", "popular": "caá-açu"}, {"familia": "RUBIACEAE", "cientifico": "Faramea tetragona", "sinonimo": "", "popular": "casco-de-vaca"}, {"familia": "RUBIACEAE", "cientifico": "Genipa americana", "sinonimo": "", "popular": "jenipapeiro"}, {"familia": "RUBIACEAE", "cientifico": "Hamelia patens", "sinonimo": "", "popular": "amélia"}, {"familia": "RUBIACEAE", "cientifico": "Posoqueria latifolia", "sinonimo": "", "popular": "laranja-de-macaco"}, {"familia": "RUBIACEAE", "cientifico": "Psychotria suterella", "sinonimo": "", "popular": "pixirica"}, {"familia": "RUBIACEAE", "cientifico": "Psychotria vellosiana", "sinonimo": "", "popular": "erva-de-rato"}, {"familia": "RUBIACEAE", "cientifico": "Randia armata", "sinonimo": "Randia spinosa", "popular": "laranja-de-macaco"}, {"familia": "RUBIACEAE", "cientifico": "Rudgea jasminoides", "sinonimo": "", "popular": "café-do-mato, jasmim-do-campo"}, {"familia": "RUTACEAE", "cientifico": "Balfourodendron riedelianum", "sinonimo": "", "popular": "pau-marfim"}, {"familia": "RUTACEAE", "cientifico": "Dictyoloma vandellianum", "sinonimo": "", "popular": "tingui"}, {"familia": "RUTACEAE", "cientifico": "Esenbeckia grandiflora", "sinonimo": "", "popular": "pau-de-cotia"}, {"familia": "RUTACEAE", "cientifico": "Esenbeckia leiocarpa", "sinonimo": "", "popular": "guarantã"}, {"familia": "RUTACEAE", "cientifico": "Metrodorea nigra", "sinonimo": "", "popular": "chupa-ferro"}, {"familia": "RUTACEAE", "cientifico": "Zanthoxylum rhoifolium", "sinonimo": "", "popular": "mamica-de-porca"}, {"familia": "SALICACEAE", "cientifico": "Casearia sylvestris", "sinonimo": "", "popular": "guaçatonga"}, {"familia": "SAPINDACEAE", "cientifico": "Allophylus edulis", "sinonimo": "", "popular": "chal-chal"}, {"familia": "SAPINDACEAE", "cientifico": "Cupania oblongifolia", "sinonimo": "", "popular": "camboatá"}, {"familia": "SAPINDACEAE", "cientifico": "Cupania vernalis", "sinonimo": "", "popular": "camboatá"}, {"familia": "SAPINDACEAE", "cientifico": "Dodonea viscosa", "sinonimo": "", "popular": "vassoura"}, {"familia": "SOLANACEAE", "cientifico": "Solanum swartzianum", "sinonimo": "", "popular": "pratinha"}, {"familia": "STYRACACEAE", "cientifico": "Styrax acuminatus", "sinonimo": "", "popular": "benjoim"}, {"familia": "THEACEAE", "cientifico": "Laplacea fruticosa", "sinonimo": "Gordonia fruticosa", "popular": ""}, {"familia": "THYMELAEACEAE", "cientifico": "Daphnopsis fasciculata", "sinonimo": "", "popular": "embira"}, {"familia": "URTICACEAE", "cientifico": "Cecropia glaziovii", "sinonimo": "", "popular": "embaúba-vermelha"}, {"familia": "URTICACEAE", "cientifico": "Cecropia hololeuca", "sinonimo": "", "popular": "embaúba-branca"}, {"familia": "URTICACEAE", "cientifico": "Cecropia pachystachya", "sinonimo": "", "popular": "embaúba-branca"}, {"familia": "VERBENACEAE", "cientifico": "Citharexylum myrianthum", "sinonimo": "", "popular": "pau-viola"}, {"familia": "VOCHYSIACEAE", "cientifico": "Vochysia magnifica", "sinonimo": "", "popular": "pau-de-tucano"}, {"familia": "VOCHYSIACEAE", "cientifico": "Vochysia tucanorum", "sinonimo": "", "popular": "pau-de-tucano"}, {"familia": "WINTERACEAE", "cientifico": "Drimys brasiliensis", "sinonimo": "", "popular": "casca-d'anta"}];
+
+let movimentacoes = [];
+let currentTab = 'estoque';
+const sortState = {
+  estoque: {key:'especie', dir:1},
+  mov: {key:'data', dir:-1},
+  esp: {key:'especie', dir:1},
+  interesse: {key:'comum', dir:1},
+  nativas: {key:'familia', dir:1},
+};
+
+function normalizeNome(s){
+  return s.toString().trim().toLowerCase()
+    .normalize('NFKD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9]+/g,'');
+}
+
+function buscaNorm(s){
+  return s.toString().trim().toLowerCase()
+    .normalize('NFKD').replace(/[\u0300-\u036f]/g,'');
+}
+
+function computeInteresseStatus(){
+  const especiesQtde = new Map(); // norm -> total qtde em estoque
+  computeSpecies().forEach(e=>{
+    especiesQtde.set(normalizeNome(e.especie), e.qtde);
+  });
+  return INTERESSE.map(item=>{
+    const norm = item.norm;
+    const tem = especiesQtde.has(norm);
+    const qtde = tem ? especiesQtde.get(norm) : 0;
+    return {comum: item.comum, cientifico: item.cientifico, tem, qtde};
+  });
+}
+
+function applySort(list, tableId, defaultCmp){
+  const st = sortState[tableId];
+  if(!st) return list;
+  list.sort((a,b)=>{
+    let va = a[st.key], vb = b[st.key];
+    if(tableId==='mov' && st.key==='data'){
+      va = parseData(a.data); vb = parseData(b.data);
+    }
+    if(typeof va === 'string' && typeof vb === 'string'){
+      return va.localeCompare(vb,'pt-BR') * st.dir;
+    }
+    return ((va>vb)-(va<vb)) * st.dir;
+  });
+  return list;
+}
+
+function updateSortHeaders(){
+  document.querySelectorAll('th.sortable').forEach(th=>{
+    const tableId = th.dataset.table;
+    const key = th.dataset.key;
+    const st = sortState[tableId];
+    const arrow = th.querySelector('.sort-arrow');
+    if(st && st.key === key){
+      th.classList.add('sort-active');
+      arrow.textContent = st.dir === 1 ? '▲' : '▼';
+    } else {
+      th.classList.remove('sort-active');
+      arrow.textContent = '';
+    }
+  });
+}
+
+document.querySelectorAll('th.sortable').forEach(th=>{
+  th.addEventListener('click', ()=>{
+    const tableId = th.dataset.table;
+    const key = th.dataset.key;
+    const st = sortState[tableId];
+    if(st.key === key){
+      st.dir *= -1;
+    } else {
+      st.key = key;
+      st.dir = 1;
+    }
+    if(tableId==='estoque') renderEstoque();
+    if(tableId==='mov') renderMovimentacoes();
+    if(tableId==='esp') renderEspecies();
+    if(tableId==='interesse') renderInteresse();
+    if(tableId==='nativas') renderNativas();
+  });
+});
+
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+function exportarPDF(tituloAba){
+  const dataHoje = new Date().toLocaleDateString('pt-BR');
+  document.getElementById('printHeader').textContent = `${document.title} — ${tituloAba} — ${dataHoje}`;
+  window.print();
+}
+
+function parseData(str){
+  // dd/mm/aaaa -> Date, for sorting
+  const [d,m,y] = str.split('/').map(Number);
+  return new Date(y, m-1, d);
+}
+
+function fmtNum(n){
+  return new Intl.NumberFormat('pt-BR').format(n);
+}
+
+function fmtMoney(n){
+  return new Intl.NumberFormat('pt-BR', {style:'currency', currency:'BRL'}).format(n);
+}
+
+const hasCloudStorage = typeof window.storage !== 'undefined' && window.storage !== null && typeof window.storage.get === 'function';
+
+async function storageGet(key){
+  if(hasCloudStorage){
+    try{
+      const res = await window.storage.get(key, false);
+      return res ? res.value : null;
+    }catch(e){
+      return null;
+    }
+  }
+  try{
+    return window.localStorage.getItem(key);
+  }catch(e){
+    return null;
+  }
+}
+
+async function storageSet(key, value){
+  if(hasCloudStorage){
+    try{
+      await window.storage.set(key, value, false);
+      return true;
+    }catch(e){
+      console.error('Erro ao salvar (cloud)', e);
+      return false;
+    }
+  }
+  try{
+    window.localStorage.setItem(key, value);
+    return true;
+  }catch(e){
+    console.error('Erro ao salvar (local)', e);
+    return false;
+  }
+}
+
+async function loadData(){
+  let loaded = false;
+  try{
+    const value = await storageGet(STORAGE_KEY);
+    if(value){
+      movimentacoes = JSON.parse(value);
+      loaded = true;
+    }
+  }catch(e){
+    console.error('Erro ao carregar dados', e);
+  }
+  if(!loaded){
+    movimentacoes = SEED.slice();
+  }
+  // migration: "Alternado"/"Corredor" sítio/lote is an access area between sítios, not a real sítio or lote
+  let migrated = false;
+  movimentacoes.forEach(m=>{
+    if(m.sitio === 'Alternado' || m.lote === 'Alternado' || m.sitio === 'Corredor' || m.lote === 'Corredor'){
+      m.sitio = 'Área de acesso';
+      m.lote = 'Área de acesso';
+      migrated = true;
+    }
+  });
+  // migration: fix incorrect dates on original saída records (were all seeded as 13/08/2026)
+  const correcoesSaida = [
+    {especie:'ACOITA CAVALO', qtde:-40, sitio:'1', lote:'3', dataAntiga:'13/08/2026', dataNova:'30/07/2026'},
+    {especie:'GUAPURUVU', qtde:-26, sitio:'1', lote:'2', dataAntiga:'13/08/2026', dataNova:'30/07/2026'},
+    {especie:'ACASSIA VERMELHA', qtde:-25, sitio:'1', lote:'1', dataAntiga:'13/08/2026', dataNova:'01/07/2026'},
+    {especie:'EMBAÚBA', qtde:-15, sitio:'1', lote:'2', dataAntiga:'13/08/2026', dataNova:'01/07/2026'},
+    {especie:'TAMBORIL', qtde:-15, sitio:'1', lote:'2', dataAntiga:'13/08/2026', dataNova:'01/07/2026'},
+  ];
+  movimentacoes.forEach(m=>{
+    if(m.evento !== 'Saída' || m.data !== '13/08/2026') return;
+    const fix = correcoesSaida.find(c =>
+      c.especie === m.especie && c.qtde === m.qtde && c.sitio === m.sitio && c.lote === m.lote && c.dataAntiga === m.data
+    );
+    if(fix){
+      m.data = fix.dataNova;
+      migrated = true;
+    }
+  });
+  // migration: add buyer/price/payment info to the first known sale (Dioni Maranhão)
+  const infoVendaDioni = [
+    {especie:'ACOITA CAVALO', qtde:-40, sitio:'1', lote:'3', data:'30/07/2026'},
+    {especie:'GUAPURUVU', qtde:-26, sitio:'1', lote:'2', data:'30/07/2026'},
+    {especie:'ACASSIA VERMELHA', qtde:-25, sitio:'1', lote:'1', data:'01/07/2026'},
+    {especie:'EMBAÚBA', qtde:-15, sitio:'1', lote:'2', data:'01/07/2026'},
+    {especie:'TAMBORIL', qtde:-15, sitio:'1', lote:'2', data:'01/07/2026'},
+  ];
+  movimentacoes.forEach(m=>{
+    if(m.evento !== 'Saída' || m.comprador) return;
+    const match = infoVendaDioni.find(c =>
+      c.especie === m.especie && c.qtde === m.qtde && c.sitio === m.sitio && c.lote === m.lote && c.data === m.data
+    );
+    if(match){
+      m.comprador = 'Dioni Maranhão';
+      m.precoUnitario = 120;
+      m.pago = false;
+      migrated = true;
+    }
+  });
+  if(!loaded || migrated) await saveData();
+}
+
+async function saveData(){
+  const ok = await storageSet(STORAGE_KEY, JSON.stringify(movimentacoes));
+  if(!ok) toast('Não foi possível salvar os dados neste dispositivo.');
+}
+
+function computeStock(){
+  // group by especie+sitio+lote
+  const map = new Map();
+  movimentacoes.forEach(m=>{
+    const key = m.especie + '|' + m.sitio + '|' + m.lote;
+    if(!map.has(key)) map.set(key, {especie:m.especie, sitio:m.sitio, lote:m.lote, qtde:0});
+    map.get(key).qtde += m.qtde;
+  });
+  return Array.from(map.values());
+}
+
+function computeLotes(){
+  // group only by sitio+lote (sum across all species)
+  const map = new Map();
+  movimentacoes.forEach(m=>{
+    const key = m.sitio + '|' + m.lote;
+    if(!map.has(key)) map.set(key, {sitio:m.sitio, lote:m.lote, qtde:0});
+    map.get(key).qtde += m.qtde;
+  });
+  return Array.from(map.values());
+}
+
+function computeSpecies(){
+  const map = new Map();
+  movimentacoes.forEach(m=>{
+    if(!map.has(m.especie)) map.set(m.especie, {especie:m.especie, sitios:new Set(), lotes:new Set(), qtde:0});
+    const e = map.get(m.especie);
+    e.sitios.add(m.sitio);
+    e.lotes.add(m.sitio+'|'+m.lote);
+    e.qtde += m.qtde;
+  });
+  return Array.from(map.values());
+}
+
+function computeSpeciesFiltered(filtroSitio, filtroLote){
+  let stock = computeStock().filter(r=>r.qtde!==0);
+  if(filtroSitio) stock = stock.filter(r=>r.sitio===filtroSitio);
+  if(filtroLote) stock = stock.filter(r=>r.lote===filtroLote);
+  const map = new Map();
+  stock.forEach(r=>{
+    if(!map.has(r.especie)) map.set(r.especie, {especie:r.especie, sitios:new Set(), lotes:new Set(), qtde:0});
+    const e = map.get(r.especie);
+    e.sitios.add(r.sitio);
+    e.lotes.add(r.sitio+'|'+r.lote);
+    e.qtde += r.qtde;
+  });
+  return Array.from(map.values());
+}
+
+function computeEspecieBreakdown(especie, filtroSitio, filtroLote){
+  let rows = computeStock().filter(r=>r.especie===especie && r.qtde!==0);
+  if(filtroSitio) rows = rows.filter(r=>r.sitio===filtroSitio);
+  if(filtroLote) rows = rows.filter(r=>r.lote===filtroLote);
+  return rows.sort((a,b)=> a.sitio.localeCompare(b.sitio,'pt-BR') || a.lote.localeCompare(b.lote,'pt-BR'));
+}
+
+function uniqueSorted(arr){
+  return Array.from(new Set(arr)).sort((a,b)=>a.localeCompare(b,'pt-BR'));
+}
+
+function renderSummary(){
+  const stock = computeStock();
+  const totalMudas = stock.reduce((s,r)=>s+r.qtde, 0);
+  const especies = new Set(movimentacoes.map(m=>m.especie)).size;
+  const sitiosTotal = new Set(movimentacoes.filter(m=>m.sitio!=='Área de acesso').map(m=>m.sitio)).size;
+  const lotes = computeLotes().filter(r=>r.sitio!=='Área de acesso');
+  const lotesTotal = lotes.length;
+  const lotesAtivos = lotes.filter(r=>r.qtde>0).length;
+  const entradas = movimentacoes.filter(m=>m.evento==='Entrada').length;
+  const saidas = movimentacoes.filter(m=>m.evento==='Saída').length;
+  const qtdeEntradas = movimentacoes.filter(m=>m.evento==='Entrada').reduce((s,m)=>s+m.qtde, 0);
+  const qtdeSaidas = movimentacoes.filter(m=>m.evento==='Saída').reduce((s,m)=>s+Math.abs(m.qtde), 0);
+  const qtdeAlternado = movimentacoes.filter(m=>m.sitio==='Área de acesso').reduce((s,m)=>s+m.qtde, 0);
+
+  const grupos = [
+    {
+      titulo: 'Informações gerais',
+      cards: [
+        {label:'Mudas em estoque', value: fmtNum(totalMudas)},
+        {label:'Espécies cadastradas', value: fmtNum(especies)},
+      ]
+    },
+    {
+      titulo: 'Movimentações',
+      cards: [
+        {label:'Total de mudas — entradas', value: fmtNum(qtdeEntradas)},
+        {label:'Total de mudas — saídas', value: fmtNum(qtdeSaidas)},
+      ]
+    },
+    {
+      titulo: 'Estrutura',
+      cards: [
+        {label:'Sítios', value: fmtNum(sitiosTotal)},
+        {label:'Lotes', value: fmtNum(lotesTotal)},
+        {label:'Lotes com estoque', value: fmtNum(lotesAtivos)},
+        {label:'Alternado', value: `${fmtNum(qtdeAlternado)} <span style="font-size:13px;font-weight:500;color:var(--ink-faint);">(Resedás)</span>`},
+      ]
+    },
+  ];
+
+  document.getElementById('summaryCards').innerHTML = grupos.map(g => `
+    <div class="summary-group">
+      <div class="summary-group-title">${g.titulo}</div>
+      <div class="summary-row">
+        ${g.cards.map(c=>`
+          <div class="metric">
+            <div class="metric-label">${c.label}</div>
+            <div class="metric-value">${c.value}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderEstoqueFiltros(){
+  const sitios = uniqueSorted(movimentacoes.map(m=>m.sitio));
+  const sel = document.getElementById('estoqueFiltroSitio');
+  const current = sel.value;
+  sel.innerHTML = '<option value="">Todos os sítios</option>' + sitios.map(s=>`<option value="${s}">${s==='Área de acesso'?s:'Sítio '+s}</option>`).join('');
+  if(sitios.includes(current)) sel.value = current;
+
+  const filtroSitio = sel.value;
+  const lotesBase = filtroSitio
+    ? movimentacoes.filter(m=>m.sitio===filtroSitio)
+    : movimentacoes;
+  const lotes = uniqueSorted(lotesBase.map(m=>m.lote));
+  const selLote = document.getElementById('estoqueFiltroLote');
+  const currentLote = selLote.value;
+  selLote.innerHTML = '<option value="">Todos os lotes</option>' + lotes.map(l=>`<option value="${l}">${l==='Área de acesso'?l:'Lote '+l}</option>`).join('');
+  if(lotes.includes(currentLote)) selLote.value = currentLote;
+}
+
+function renderEspFiltros(){
+  const sitios = uniqueSorted(movimentacoes.map(m=>m.sitio));
+  const sel = document.getElementById('espFiltroSitio');
+  const current = sel.value;
+  sel.innerHTML = '<option value="">Todos os sítios</option>' + sitios.map(s=>`<option value="${s}">${s==='Área de acesso'?s:'Sítio '+s}</option>`).join('');
+  if(sitios.includes(current)) sel.value = current;
+
+  const filtroSitio = sel.value;
+  const lotesBase = filtroSitio
+    ? movimentacoes.filter(m=>m.sitio===filtroSitio)
+    : movimentacoes;
+  const lotes = uniqueSorted(lotesBase.map(m=>m.lote));
+  const selLote = document.getElementById('espFiltroLote');
+  const currentLote = selLote.value;
+  selLote.innerHTML = '<option value="">Todos os lotes</option>' + lotes.map(l=>`<option value="${l}">${l==='Área de acesso'?l:'Lote '+l}</option>`).join('');
+  if(lotes.includes(currentLote)) selLote.value = currentLote;
+}
+
+function renderEstoque(){
+  const busca = buscaNorm(document.getElementById('estoqueBusca').value);
+  const filtroSitio = document.getElementById('estoqueFiltroSitio').value;
+  const filtroLote = document.getElementById('estoqueFiltroLote').value;
+  let stock = computeStock().filter(r=>r.qtde !== 0);
+  if(busca) stock = stock.filter(r=>buscaNorm(r.especie).includes(busca));
+  if(filtroSitio) stock = stock.filter(r=>r.sitio === filtroSitio);
+  if(filtroLote) stock = stock.filter(r=>r.lote === filtroLote);
+
+  const totalQtde = stock.reduce((s,r)=>s+r.qtde,0);
+  document.getElementById('estoqueTotal').textContent = `${fmtNum(stock.length)} registro(s) — ${fmtNum(totalQtde)} mudas`;
+
+  const container = document.getElementById('estoqueGroups');
+  if(stock.length===0){
+    container.innerHTML = '<div class="table-wrap"><table><tbody><tr class="empty-row"><td>Nenhum registro de estoque encontrado.</td></tr></tbody></table></div>';
+    return;
+  }
+
+  const grupos = new Map();
+  stock.forEach(r=>{
+    if(!grupos.has(r.sitio)) grupos.set(r.sitio, []);
+    grupos.get(r.sitio).push(r);
+  });
+  const sitiosOrdenados = Array.from(grupos.keys()).sort((a,b)=>a.localeCompare(b,'pt-BR'));
+
+  container.innerHTML = sitiosOrdenados.map(sitio=>{
+    const itensBrutos = grupos.get(sitio);
+    const porEspecie = new Map();
+    itensBrutos.forEach(r=>{
+      porEspecie.set(r.especie, (porEspecie.get(r.especie)||0) + r.qtde);
+    });
+    const itens = Array.from(porEspecie.entries())
+      .map(([especie,qtde])=>({especie,qtde}))
+      .sort((a,b)=> a.especie.localeCompare(b.especie,'pt-BR'));
+    const subtotal = itens.reduce((s,r)=>s+r.qtde,0);
+    const rotulo = sitio==='Área de acesso' ? sitio : `Sítio ${sitio}`;
+    return `
+    <div class="venda-group">
+      <div class="venda-group-header">
+        <span class="venda-group-date">${rotulo}</span>
+        <span class="venda-group-total">${fmtNum(subtotal)} mudas</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Espécie</th>
+              <th class="num">Estoque</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${itens.map(r=>`
+              <tr>
+                <td>${r.especie}</td>
+                <td class="num">${fmtNum(r.qtde)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderMovimentacoes(){
+  const busca = buscaNorm(document.getElementById('movBusca').value);
+  const filtroEvento = document.getElementById('movFiltroEvento').value;
+  let list = movimentacoes.slice();
+  if(busca) list = list.filter(m=>buscaNorm(m.especie).includes(busca));
+  if(filtroEvento) list = list.filter(m=>m.evento === filtroEvento);
+  applySort(list, 'mov');
+
+  const totalEntradas = list.filter(m=>m.evento==='Entrada').reduce((s,m)=>s+m.qtde,0);
+  const totalSaidas = list.filter(m=>m.evento==='Saída').reduce((s,m)=>s+Math.abs(m.qtde),0);
+  document.getElementById('movTotal').textContent = `${fmtNum(list.length)} registro(s) — ${fmtNum(totalEntradas)} entradas, ${fmtNum(totalSaidas)} saídas`;
+
+  const porSitio = new Map();
+  list.forEach(m=>{
+    if(!porSitio.has(m.sitio)) porSitio.set(m.sitio, {entradas:0, saidas:0});
+    const s = porSitio.get(m.sitio);
+    if(m.evento==='Entrada') s.entradas += m.qtde;
+    else s.saidas += Math.abs(m.qtde);
+  });
+  const sitiosOrdenados = Array.from(porSitio.keys()).sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  document.getElementById('movSubtotais').innerHTML = sitiosOrdenados.map(sitio=>{
+    const s = porSitio.get(sitio);
+    const rotulo = sitio==='Área de acesso' ? sitio : `Sítio ${sitio}`;
+    return `<span class="subtotal-chip">${rotulo}: <b>${fmtNum(s.entradas)}</b> entradas, <b>${fmtNum(s.saidas)}</b> saídas</span>`;
+  }).join('');
+
+  const body = document.getElementById('movBody');
+  if(list.length===0){
+    body.innerHTML = '<tr class="empty-row"><td colspan="6">Nenhuma movimentação encontrada.</td></tr>';
+    updateSortHeaders();
+    return;
+  }
+  body.innerHTML = list.map(m=>`
+    <tr>
+      <td>${m.data}</td>
+      <td><span class="badge ${m.evento==='Entrada'?'entrada':'saida'}">${m.evento}</span></td>
+      <td>${m.especie}</td>
+      <td>${m.sitio}</td>
+      <td>${m.lote}</td>
+      <td class="num">${m.qtde>0?'+':''}${fmtNum(m.qtde)}</td>
+    </tr>
+  `).join('');
+  updateSortHeaders();
+}
+
+function renderEspecies(){
+  const busca = buscaNorm(document.getElementById('espBusca').value);
+  const filtroSitio = document.getElementById('espFiltroSitio').value;
+  const filtroLote = document.getElementById('espFiltroLote').value;
+  let list = computeSpeciesFiltered(filtroSitio, filtroLote).map(e=>({
+    especie: e.especie,
+    sitios: e.sitios.size,
+    lotes: e.lotes.size,
+    qtde: e.qtde
+  }));
+  if(busca) list = list.filter(e=>buscaNorm(e.especie).includes(busca));
+  applySort(list, 'esp');
+
+  const totalQtde = list.reduce((s,e)=>s+e.qtde,0);
+  document.getElementById('espTotal').textContent = `${fmtNum(list.length)} espécie(s) — ${fmtNum(totalQtde)} mudas`;
+
+  const body = document.getElementById('espBody');
+  if(list.length===0){
+    body.innerHTML = '<tr class="empty-row"><td colspan="4">Nenhuma espécie encontrada.</td></tr>';
+    updateSortHeaders();
+    return;
+  }
+  body.innerHTML = list.map(e=>{
+    const expandible = e.lotes > 1;
+    let rows = `
+    <tr>
+      <td>${e.especie}</td>
+      <td class="num">${fmtNum(e.qtde)}</td>
+      <td class="num">${fmtNum(e.sitios)}</td>
+      <td class="num">${fmtNum(e.lotes)}</td>
+    </tr>`;
+    if(expandible){
+      const breakdown = computeEspecieBreakdown(e.especie, filtroSitio, filtroLote);
+      rows += breakdown.map(b=>`
+        <tr style="background:#FBFAF6;">
+          <td style="padding-left:20px;color:var(--ink-soft);font-size:12.5px;">Sítio ${b.sitio} · Lote ${b.lote}</td>
+          <td class="num" style="color:var(--ink-soft);font-size:12.5px;">${fmtNum(b.qtde)}</td>
+          <td></td>
+          <td></td>
+        </tr>
+      `).join('');
+    }
+    return rows;
+  }).join('');
+  updateSortHeaders();
+}
+
+function renderInteresse(){
+  const busca = buscaNorm(document.getElementById('interesseBusca').value);
+  const filtroStatus = document.getElementById('interesseFiltroStatus').value;
+  let list = computeInteresseStatus();
+  if(busca) list = list.filter(i => buscaNorm(i.comum).includes(busca) || buscaNorm(i.cientifico).includes(busca));
+  if(filtroStatus === 'tem') list = list.filter(i=>i.tem);
+  if(filtroStatus === 'nao') list = list.filter(i=>!i.tem);
+  applySort(list, 'interesse');
+
+  const jaTemCount = list.filter(i=>i.tem).length;
+  const naoTemCount = list.length - jaTemCount;
+  const totalMudas = list.reduce((s,i)=>s+(i.tem?i.qtde:0),0);
+  document.getElementById('interesseTotal').innerHTML = `
+    <span class="subtotal-chip">${fmtNum(list.length)} espécie(s) na lista</span>
+    <span class="subtotal-chip">${fmtNum(jaTemCount)} em estoque — <b>${fmtNum(totalMudas)} mudas</b></span>
+    <span class="subtotal-chip">${fmtNum(naoTemCount)} ainda não temos</span>
+  `;
+
+  const body = document.getElementById('interesseBody');
+  if(list.length===0){
+    body.innerHTML = '<tr class="empty-row"><td colspan="4">Nenhuma espécie encontrada.</td></tr>';
+    updateSortHeaders();
+    return;
+  }
+  body.innerHTML = list.map(i=>`
+    <tr>
+      <td>${i.comum}</td>
+      <td style="font-style:italic;color:var(--ink-soft);">${i.cientifico || '—'}</td>
+      <td>${i.tem ? '<span class="badge entrada">Já no estoque</span>' : '<span class="badge saida">Ainda não temos</span>'}</td>
+      <td class="num">${i.tem ? fmtNum(i.qtde) : '—'}</td>
+    </tr>
+  `).join('');
+  updateSortHeaders();
+}
+
+function computeVendas(){
+  const vendas = movimentacoes.filter(m=>m.evento==='Saída');
+  const map = new Map();
+  vendas.forEach(v=>{
+    if(!map.has(v.data)) map.set(v.data, []);
+    map.get(v.data).push(v);
+  });
+  const groups = Array.from(map.entries()).map(([data, itens])=>{
+    const compradores = new Set(itens.filter(i=>i.comprador).map(i=>i.comprador));
+    const comprador = compradores.size === 1 ? Array.from(compradores)[0] : (compradores.size > 1 ? 'Vários compradores' : null);
+    const valorAReceber = itens.reduce((s,i)=> s + (i.precoUnitario && i.pago===false ? Math.abs(i.qtde)*i.precoUnitario : 0), 0);
+    const valorRecebido = itens.reduce((s,i)=> s + (i.precoUnitario && i.pago===true ? Math.abs(i.qtde)*i.precoUnitario : 0), 0);
+    return {
+      data, dataObj: parseData(data), itens,
+      total: itens.reduce((s,i)=>s+Math.abs(i.qtde),0),
+      comprador, valorAReceber, valorRecebido
+    };
+  });
+  groups.sort((a,b)=> b.dataObj - a.dataObj);
+  return groups;
+}
+
+function renderVendasFiltros(){
+  const vendas = movimentacoes.filter(m=>m.evento==='Saída');
+
+  const compradores = uniqueSorted(vendas.filter(v=>v.comprador).map(v=>v.comprador));
+  const temSemComprador = vendas.some(v=>!v.comprador);
+  const selComprador = document.getElementById('vendasFiltroComprador');
+  const currentComprador = selComprador.value;
+  selComprador.innerHTML = '<option value="">Todos os compradores</option>'
+    + compradores.map(c=>`<option value="${c}">${c}</option>`).join('')
+    + (temSemComprador ? '<option value="__sem__">Sem comprador informado</option>' : '');
+  if(currentComprador && (compradores.includes(currentComprador) || currentComprador==='__sem__')) selComprador.value = currentComprador;
+
+  const datas = Array.from(new Set(vendas.map(v=>v.data))).sort((a,b)=> parseData(b)-parseData(a));
+  const selData = document.getElementById('vendasFiltroData');
+  const currentData = selData.value;
+  selData.innerHTML = '<option value="">Todas as datas</option>' + datas.map(d=>`<option value="${d}">${d}</option>`).join('');
+  if(datas.includes(currentData)) selData.value = currentData;
+}
+
+function renderVendas(){
+  const busca = buscaNorm(document.getElementById('vendasBusca').value);
+  const filtroComprador = document.getElementById('vendasFiltroComprador').value;
+  const filtroData = document.getElementById('vendasFiltroData').value;
+
+  let groups = computeVendas();
+  if(filtroData) groups = groups.filter(g=>g.data===filtroData);
+  if(busca || filtroComprador){
+    groups = groups
+      .map(g=>({...g, itens: g.itens.filter(i=>
+        (!busca || buscaNorm(i.especie).includes(busca)) &&
+        (!filtroComprador || (filtroComprador==='__sem__' ? !i.comprador : i.comprador===filtroComprador))
+      )}))
+      .filter(g=>g.itens.length>0);
+  }
+  groups = groups.map(g=>({
+    ...g,
+    total: g.itens.reduce((s,i)=>s+Math.abs(i.qtde),0),
+    valorAReceber: g.itens.reduce((s,i)=> s + (i.precoUnitario && i.pago===false ? Math.abs(i.qtde)*i.precoUnitario : 0), 0),
+    valorRecebido: g.itens.reduce((s,i)=> s + (i.precoUnitario && i.pago===true ? Math.abs(i.qtde)*i.precoUnitario : 0), 0),
+  }));
+
+  const totalMudas = groups.reduce((s,g)=>s+g.total,0);
+  const totalRegistros = groups.reduce((s,g)=>s+g.itens.length,0);
+  const totalAReceber = groups.reduce((s,g)=>s+g.valorAReceber,0);
+  document.getElementById('vendasTotalMudas').textContent = fmtNum(totalMudas);
+  document.getElementById('vendasTotalRegistros').textContent = fmtNum(totalRegistros);
+
+  let receberEl = document.getElementById('vendasTotalAReceber');
+  if(totalAReceber > 0){
+    if(!receberEl){
+      const row = document.querySelector('#panel-vendas .summary-row');
+      const div = document.createElement('div');
+      div.className = 'metric';
+      div.innerHTML = `<div class="metric-label">A receber</div><div class="metric-value" id="vendasTotalAReceber" style="color:var(--clay-dark);"></div>`;
+      row.appendChild(div);
+      receberEl = document.getElementById('vendasTotalAReceber');
+    }
+    receberEl.textContent = fmtMoney(totalAReceber);
+  } else if(receberEl){
+    receberEl.closest('.metric').remove();
+  }
+
+  const container = document.getElementById('vendasGroups');
+  if(groups.length===0){
+    container.innerHTML = '<div class="table-wrap"><table><tbody><tr class="empty-row"><td>Nenhuma venda encontrada.</td></tr></tbody></table></div>';
+    return;
+  }
+  container.innerHTML = groups.map(g=>`
+    <div class="venda-group">
+      <div class="venda-group-header">
+        <span class="venda-group-date">
+          ${g.data}
+          ${g.comprador ? `<span style="display:block;font-family:'Inter',sans-serif;font-size:12.5px;font-weight:500;color:var(--ink-soft);margin-top:2px;">Comprador: ${g.comprador}</span>` : ''}
+        </span>
+        <span style="text-align:right;">
+          <span class="venda-group-total" style="display:block;">${fmtNum(g.total)} mudas vendidas</span>
+          ${g.valorAReceber > 0 ? `<span style="display:block;font-size:12px;font-weight:600;color:var(--danger);margin-top:2px;">A receber: ${fmtMoney(g.valorAReceber)}</span>` : ''}
+          ${g.valorRecebido > 0 ? `<span style="display:block;font-size:12px;font-weight:600;color:var(--success);margin-top:2px;">Recebido: ${fmtMoney(g.valorRecebido)}</span>` : ''}
+        </span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Espécie</th>
+              <th>Sítio</th>
+              <th>Lote</th>
+              <th class="num">Qtde vendida</th>
+              <th class="num">Preço/muda</th>
+              <th class="num">Valor</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${g.itens.map(i=>`
+              <tr>
+                <td>${i.especie}</td>
+                <td>${i.sitio}</td>
+                <td>${i.lote}</td>
+                <td class="num">${fmtNum(Math.abs(i.qtde))}</td>
+                <td class="num">${i.precoUnitario ? fmtMoney(i.precoUnitario) : '—'}</td>
+                <td class="num">${i.precoUnitario ? fmtMoney(Math.abs(i.qtde)*i.precoUnitario) : '—'}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderNativas(){
+  const busca = buscaNorm(document.getElementById('nativasBusca').value);
+  let list = NATIVAS.slice();
+  if(busca){
+    list = list.filter(n =>
+      buscaNorm(n.familia).includes(busca) ||
+      buscaNorm(n.cientifico).includes(busca) ||
+      buscaNorm(n.sinonimo).includes(busca) ||
+      buscaNorm(n.popular).includes(busca)
+    );
+  }
+  applySort(list, 'nativas');
+
+  document.getElementById('nativasTotal').textContent = `${fmtNum(list.length)} espécie(s) encontrada(s)`;
+
+  const body = document.getElementById('nativasBody');
+  if(list.length===0){
+    body.innerHTML = '<tr class="empty-row"><td colspan="4">Nenhuma espécie encontrada.</td></tr>';
+    updateSortHeaders();
+    return;
+  }
+  body.innerHTML = list.map(n=>`
+    <tr>
+      <td>${n.familia}</td>
+      <td style="font-style:italic;color:var(--ink-soft);">${n.cientifico}</td>
+      <td style="font-style:italic;color:var(--ink-faint);">${n.sinonimo || '—'}</td>
+      <td>${n.popular || '—'}</td>
+    </tr>
+  `).join('');
+  updateSortHeaders();
+}
+
+function renderAll(){
+  renderSummary();
+  renderEstoqueFiltros();
+  renderEstoque();
+  renderMovimentacoes();
+  renderEspFiltros();
+  renderEspecies();
+  renderInteresse();
+  renderVendasFiltros();
+  renderVendas();
+  renderNativas();
+}
+
+// Tabs
+document.getElementById('tabs').addEventListener('click', (e)=>{
+  const btn = e.target.closest('.tab');
+  if(!btn) return;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
+});
+
+// Filters
+document.getElementById('estoqueBusca').addEventListener('input', renderEstoque);
+document.getElementById('estoqueFiltroSitio').addEventListener('change', ()=>{
+  document.getElementById('estoqueFiltroLote').value = '';
+  renderEstoqueFiltros();
+  renderEstoque();
+});
+document.getElementById('estoqueFiltroLote').addEventListener('change', renderEstoque);
+document.getElementById('movBusca').addEventListener('input', renderMovimentacoes);
+document.getElementById('movFiltroEvento').addEventListener('change', renderMovimentacoes);
+document.getElementById('espBusca').addEventListener('input', renderEspecies);
+document.getElementById('espFiltroSitio').addEventListener('change', ()=>{
+  document.getElementById('espFiltroLote').value = '';
+  renderEspFiltros();
+  renderEspecies();
+});
+document.getElementById('espFiltroLote').addEventListener('change', renderEspecies);
+document.getElementById('interesseBusca').addEventListener('input', renderInteresse);
+document.getElementById('interesseFiltroStatus').addEventListener('change', renderInteresse);
+document.getElementById('vendasBusca').addEventListener('input', renderVendas);
+document.getElementById('vendasFiltroComprador').addEventListener('change', renderVendas);
+document.getElementById('vendasFiltroData').addEventListener('change', renderVendas);
+document.getElementById('nativasBusca').addEventListener('input', renderNativas);
+
+function aplicarModoCliente(){
+  const params = new URLSearchParams(window.location.search);
+  if(params.get('modo') !== 'cliente') return;
+
+  document.title = 'Viveiro de Mudas';
+  const heroTitle = document.getElementById('heroTitle');
+  if(heroTitle) heroTitle.textContent = 'Viveiro de Mudas';
+
+  // esconde abas sensíveis (só ficam visíveis Estoque e Espécies Nativas)
+  const abasEscondidas = ['movimentacoes','vendas','interesse','especies'];
+  abasEscondidas.forEach(tab=>{
+    const btn = document.querySelector(`.tab[data-tab="${tab}"]`);
+    if(btn) btn.style.display = 'none';
+    const panel = document.getElementById('panel-'+tab);
+    if(panel) panel.style.display = 'none';
+  });
+
+  // se a aba ativa for uma das escondidas, volta pro Estoque
+  const ativo = document.querySelector('.tab.active');
+  if(ativo && abasEscondidas.includes(ativo.dataset.tab)){
+    ativo.classList.remove('active');
+    const estoqueBtn = document.querySelector('.tab[data-tab="estoque"]');
+    const estoquePanel = document.getElementById('panel-estoque');
+    if(estoqueBtn) estoqueBtn.classList.add('active');
+    if(estoquePanel) estoquePanel.classList.add('active');
+  }
+
+  // no cabeçalho, só fica visível o grupo "Informações gerais"
+  document.querySelectorAll('.summary-group-title').forEach(el=>{
+    if(el.textContent.trim() !== 'Informações gerais'){
+      el.style.display = 'none';
+      if(el.nextElementSibling) el.nextElementSibling.style.display = 'none';
+    }
+  });
+}
+
+(async function init(){
+  try{
+    await loadData();
+  }catch(e){
+    console.error('Erro na inicialização, usando dados padrão', e);
+    movimentacoes = SEED.slice();
+  }
+  renderAll();
+  aplicarModoCliente();
+})();
+</script>
+</body>
+</html>
