@@ -1,0 +1,3103 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerencial Viveiro</title>
+<meta property="og:title" content="Gerencial Viveiro">
+<meta property="og:description" content="Controle de estoque de mudas do viveiro.">
+<meta name="description" content="Controle de estoque de mudas do viveiro.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --forest:#26402F;
+    --forest-light:#3C5C46;
+    --moss:#E9EEE5;
+    --moss-line:#D3DBC9;
+    --clay:#B9713B;
+    --clay-light:#F2E2D0;
+    --clay-dark:#8A5228;
+    --bark:#5B4636;
+    --cream:#FAF8F3;
+    --paper:#FFFFFF;
+    --ink:#22281F;
+    --ink-soft:#5A6355;
+    --ink-faint:#8D9585;
+    --line:#E4E0D3;
+    --danger:#A3372E;
+    --danger-bg:#F7E7E4;
+    --success:#3B7A47;
+    --success-bg:#E6EFE3;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Inter',system-ui,sans-serif;
+    background:var(--cream);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.display{
+    font-family:'Fraunces',serif;
+    font-weight:500;
+    letter-spacing:-0.01em;
+    color:var(--forest);
+    margin:0;
+  }
+  .app{max-width:1080px;margin:0 auto;padding:28px 20px 64px;}
+
+  /* Header */
+  .hero{
+    background:var(--forest);
+    color:#F2F3EE;
+    padding:36px 20px 32px;
+    position:relative;
+    overflow:hidden;
+  }
+  .hero::before{
+    content:"";
+    position:absolute;
+    right:-40px; top:-60px;
+    width:280px; height:280px;
+    border-radius:50%;
+    background:radial-gradient(circle at 30% 30%, rgba(185,113,59,0.35), transparent 70%);
+  }
+  .hero-inner{max-width:1080px;margin:0 auto;position:relative;}
+  .hero-eyebrow{
+    font-size:12px;
+    letter-spacing:0.09em;
+    text-transform:uppercase;
+    color:#B7C7B2;
+    margin-bottom:6px;
+  }
+  .hero h1{color:#FBF9F3;font-size:30px;}
+  .hero-sub{color:#C6D2C0;font-size:14.5px;margin-top:6px;max-width:520px;line-height:1.55;}
+
+  /* Summary cards */
+  .summary{
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+    margin-top:26px;
+    position:relative;
+    z-index:2;
+  }
+  .summary-group-title{
+    font-size:11.5px;
+    font-weight:600;
+    letter-spacing:0.07em;
+    text-transform:uppercase;
+    color:#9FB097;
+    margin-bottom:8px;
+  }
+  .summary-row{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+    gap:12px;
+  }
+  .metric{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:16px 18px;
+    box-shadow:0 10px 24px rgba(38,64,47,0.08);
+  }
+  .metric-label{font-size:12px;color:var(--ink-faint);margin-bottom:6px;}
+  .metric-value{font-family:'Fraunces',serif;font-size:26px;font-weight:500;color:var(--forest);}
+  .metric-value.clay{color:var(--clay-dark);}
+
+  /* Nav tabs */
+  .tabs{
+    display:flex;
+    gap:4px;
+    margin:32px 0 22px;
+    border-bottom:1px solid var(--line);
+    overflow-x:auto;
+  }
+  .tab{
+    font-family:'Inter',sans-serif;
+    font-size:14px;
+    font-weight:500;
+    color:var(--ink-soft);
+    background:none;
+    border:none;
+    padding:10px 14px;
+    cursor:pointer;
+    border-bottom:2px solid transparent;
+    white-space:nowrap;
+  }
+  .tab.active{color:var(--forest);border-bottom-color:var(--clay);}
+  .tab:hover:not(.active){color:var(--forest);}
+
+  .panel{display:none;}
+  .panel.active{display:block;}
+
+  /* Toolbar */
+  .toolbar{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    align-items:center;
+    margin-bottom:16px;
+  }
+  .toolbar input[type="text"], .toolbar select, select, input[type="text"], input[type="number"], input[type="date"]{
+    font-family:'Inter',sans-serif;
+    font-size:13.5px;
+    padding:9px 12px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    background:var(--paper);
+    color:var(--ink);
+  }
+  .toolbar input[type="text"]{min-width:200px;flex:1;}
+  label{font-size:12.5px;color:var(--ink-soft);font-weight:500;display:block;margin-bottom:5px;}
+
+  /* Table */
+  .table-wrap{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:12px;
+    overflow-x:auto;
+  }
+  table{width:100%;min-width:520px;border-collapse:collapse;font-size:13.5px;}
+  thead th{
+    text-align:left;
+    font-size:11.5px;
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+    color:var(--ink-faint);
+    background:var(--moss);
+    padding:10px 14px;
+    border-bottom:1px solid var(--moss-line);
+    font-weight:600;
+    position:sticky;
+    top:0;
+  }
+  th.sortable{cursor:pointer;user-select:none;}
+  th.sortable-inv{cursor:pointer;user-select:none;}
+  th.sortable-inv:hover{color:var(--forest);}
+  th.sortable:hover{color:var(--forest);}
+  .sort-arrow{display:inline-block;width:10px;margin-left:3px;font-size:10px;}
+  th.sort-active{color:var(--forest);}
+  tbody td{
+    padding:10px 14px;
+    border-bottom:1px solid var(--line);
+    color:var(--ink);
+  }
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:hover{background:#FBFAF6;}
+  td.num, th.num{text-align:right;font-variant-numeric:tabular-nums;}
+  .badge{
+    display:inline-block;
+    font-size:11.5px;
+    font-weight:600;
+    padding:3px 9px;
+    border-radius:100px;
+  }
+  .badge.entrada{background:var(--success-bg);color:var(--success);}
+  .badge.saida{background:var(--danger-bg);color:var(--danger);}
+  .empty-row td{text-align:center;color:var(--ink-faint);padding:32px;}
+
+  /* Form */
+  .form-card{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:22px 24px;
+    max-width:520px;
+  }
+  .form-row{margin-bottom:16px;}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .evento-toggle{display:flex;gap:8px;}
+  .evento-btn{
+    flex:1;
+    padding:10px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    background:var(--paper);
+    font-family:'Inter',sans-serif;
+    font-size:13.5px;
+    font-weight:600;
+    cursor:pointer;
+    color:var(--ink-soft);
+  }
+  .evento-btn.sel-entrada{border-color:var(--success);background:var(--success-bg);color:var(--success);}
+  .evento-btn.sel-saida{border-color:var(--danger);background:var(--danger-bg);color:var(--danger);}
+  input, select{width:100%;}
+  .btn{
+    font-family:'Inter',sans-serif;
+    font-size:13.5px;
+    font-weight:600;
+    padding:10px 18px;
+    border-radius:8px;
+    border:1px solid var(--forest);
+    background:var(--forest);
+    color:#fff;
+    cursor:pointer;
+  }
+  .btn:hover{background:var(--forest-light);}
+  .btn.secondary{background:var(--paper);color:var(--forest);border-color:var(--line);}
+  .btn.secondary:hover{background:var(--moss);}
+  .error-text{font-size:12.5px;color:var(--danger);margin-top:5px;display:none;}
+  .hint{font-size:12.5px;color:var(--ink-faint);margin-top:10px;}
+  .print-value{display:none;}
+  .print-only-row{display:none;}
+  .list-total{font-size:12.5px;color:var(--ink-soft);margin:-6px 0 14px;font-weight:500;display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+  .subtotal-wrap{display:flex;flex-wrap:wrap;gap:8px;margin:-4px 0 14px;}
+  .subtotal-chip{
+    font-size:12px;
+    background:var(--moss);
+    border:1px solid var(--moss-line);
+    color:var(--ink-soft);
+    padding:5px 10px;
+    border-radius:100px;
+  }
+  .subtotal-chip b{color:var(--forest);font-weight:600;}
+  .toast{
+    position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+    background:var(--forest);color:#fff;padding:10px 20px;border-radius:8px;
+    font-size:13.5px;font-weight:500;
+    opacity:0;pointer-events:none;transition:opacity .25s;
+    z-index:50;
+  }
+  .toast.show{opacity:1;}
+
+  .section-title{font-size:18px;margin-bottom:14px;}
+  .venda-group{margin-bottom:22px;}
+  .venda-group-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    margin-bottom:8px;
+  }
+  .venda-group-date{
+    font-family:'Fraunces',serif;
+    font-size:16px;
+    font-weight:500;
+    color:var(--forest);
+  }
+  .venda-group-total{
+    font-size:13px;
+    font-weight:600;
+    color:var(--clay-dark);
+  }
+  .row-flex{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;}
+  datalist{}
+  ::placeholder{color:var(--ink-faint);}
+  @media (max-width:600px){
+    .form-grid{grid-template-columns:1fr;}
+    .hero h1{font-size:24px;}
+    .metric-value{font-size:21px;}
+  }
+
+  .print-header{display:none;}
+
+  /* Resumo Mensal — tabelas anuais (Plano de Investimentos) */
+  table.resumo-anual{width:100%;min-width:0;table-layout:fixed;font-size:9px;}
+  table.resumo-anual thead th{font-size:8.5px;padding:5px 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right;}
+  table.resumo-anual thead th:first-child{text-align:left;width:11.5%;}
+  table.resumo-anual thead th.wrap{white-space:normal;line-height:1.2;vertical-align:bottom;text-align:center;overflow:visible;text-overflow:clip;width:10.5%;}
+  table.resumo-anual tbody td, table.resumo-anual tfoot td{padding:4px 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right;}
+  table.resumo-anual tbody td:first-child, table.resumo-anual tfoot td:first-child{text-align:left;white-space:normal;line-height:1.25;overflow:visible;text-overflow:clip;color:var(--ink);}
+  table.resumo-anual td.total-col{padding-left:8px;padding-right:8px;overflow:visible;text-overflow:clip;}
+
+  @media print{
+    @page{ size: landscape; margin: 10mm; }
+    .no-print{display:none !important;}
+    .hero{display:none !important;}
+    .tabs{display:none !important;}
+    .toolbar select, .toolbar input{display:none !important;}
+    .app{padding:0;max-width:100%;}
+    body{background:#fff;}
+    .print-header{
+      display:block;
+      font-family:'Fraunces',serif;
+      font-size:18px;
+      font-weight:500;
+      color:var(--forest);
+      margin-bottom:4mm;
+      padding:0 0 3mm;
+      border-bottom:2px solid var(--forest);
+    }
+    .table-wrap{border:none;box-shadow:none;overflow:visible;}
+    thead th{position:static;}
+    .venda-group{break-inside:avoid;}
+    #invpanel-resumo table{min-width:0;width:100%;table-layout:fixed;font-size:9px;}
+    input[data-mes]{display:none !important;}
+    tfoot.print-only-row{display:table-footer-group !important;}
+    .print-value{display:inline !important;}
+    #invpanel-resumo th, #invpanel-resumo td{padding:3px 4px;word-break:break-word;}
+    #invpanel-resumo .section-title{break-before:auto;}
+    #modalOverlay[style*="flex"]{
+      position:static !important;
+      background:none !important;
+      padding:0 !important;
+      display:block !important;
+    }
+    #modalOverlay[style*="flex"] > div{
+      max-width:100% !important;
+      max-height:none !important;
+      box-shadow:none !important;
+      border-radius:0 !important;
+      padding:0 !important;
+      overflow:visible !important;
+    }
+    body:has(#modalOverlay[style*="flex"]) > .hero,
+    body:has(#modalOverlay[style*="flex"]) > .app{
+      display:none !important;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="print-header" id="printHeader"></div>
+
+<div class="hero">
+  <div class="hero-inner">
+    <h1 id="heroTitle">Gerencial Viveiro</h1>
+    <div class="summary" id="summaryCards"></div>
+  </div>
+</div>
+
+<div class="app">
+  <div class="tabs" id="tabs">
+    <button class="tab" data-tab="especies">Espécies em Estoque</button>
+    <button class="tab active" data-tab="estoque">Mudas em Estoque</button>
+    <button class="tab" data-tab="interesse">Hotlist</button>
+    <button class="tab" data-tab="movimentacoes">Movimentações</button>
+    <button class="tab" data-tab="vendas">Vendas</button>
+    <button class="tab" data-tab="nativas">Espécies Nativas</button>
+    <button class="tab" data-tab="investimentos">Plano Financeiro</button>
+  </div>
+
+  <!-- ESTOQUE ATUAL -->
+  <div class="panel active" id="panel-estoque">
+    <div class="toolbar">
+      <input type="text" id="estoqueBusca" placeholder="Buscar espécie...">
+      <div>
+        <label style="margin-bottom:0;display:inline;">Sítio</label>
+        <select id="estoqueFiltroSitio" style="width:auto;"></select>
+      </div>
+      <div>
+        <label style="margin-bottom:0;display:inline;">Lote</label>
+        <select id="estoqueFiltroLote" style="width:auto;"></select>
+      </div>
+      <div>
+        <label style="margin-bottom:0;display:inline;">DAP</label>
+        <select id="estoqueFiltroDap" style="width:auto;">
+          <option value="">Todas</option>
+          <option value="DAP1">DAP1</option>
+          <option value="DAP2">DAP2</option>
+          <option value="DAP3">DAP3</option>
+          <option value="Hotlist/Comercial">Hotlist/Comercial</option>
+          <option value="__sem__">Sem classificação</option>
+        </select>
+      </div>
+      <div>
+        <label style="margin-bottom:0;display:inline;">Hotlist</label>
+        <select id="estoqueFiltroHotlist" style="width:auto;">
+          <option value="">Todas</option>
+          <option value="sim">Só Hotlist</option>
+          <option value="nao">Fora da Hotlist</option>
+        </select>
+      </div>
+      <div>
+        <label style="margin-bottom:0;display:inline;">Saídas</label>
+        <select id="estoqueFiltroSaidas" style="width:auto;">
+          <option value="">Todas</option>
+          <option value="com">Só com saídas</option>
+          <option value="sem">Sem saídas</option>
+        </select>
+      </div>
+      <button class="btn secondary no-print" onclick="exportarPDF('Estoque')">Exportar PDF</button>
+    </div>
+    <div class="list-total" id="estoqueTotal"></div>
+    <div id="estoqueGroups"></div>
+  </div>
+
+  <!-- MOVIMENTAÇÕES -->
+  <div class="panel" id="panel-movimentacoes">
+    <div class="toolbar">
+      <input type="text" id="movBusca" placeholder="Buscar espécie...">
+      <select id="movFiltroEvento" style="width:auto;">
+        <option value="">Todos eventos</option>
+        <option value="Entrada">Entrada</option>
+        <option value="Saída">Saída</option>
+      </select>
+      <button class="btn secondary no-print" onclick="exportarPDF('Movimentações')">Exportar PDF</button>
+    </div>
+    <div class="list-total" id="movTotal"></div>
+    <div id="movSubtotais" class="subtotal-wrap"></div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="sortable" data-table="mov" data-key="data">Data<span class="sort-arrow"></span></th>
+            <th class="sortable" data-table="mov" data-key="evento">Evento<span class="sort-arrow"></span></th>
+            <th class="sortable" data-table="mov" data-key="especie">Espécie<span class="sort-arrow"></span></th>
+            <th class="sortable" data-table="mov" data-key="sitio">Sítio<span class="sort-arrow"></span></th>
+            <th class="sortable" data-table="mov" data-key="lote">Lote<span class="sort-arrow"></span></th>
+            <th class="num sortable" data-table="mov" data-key="qtde">Qtde<span class="sort-arrow"></span></th>
+          </tr>
+        </thead>
+        <tbody id="movBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ESPÉCIES -->
+  <div class="panel" id="panel-especies">
+    <div class="toolbar">
+      <input type="text" id="espBusca" placeholder="Buscar espécie...">
+      <div>
+        <label style="margin-bottom:0;display:inline;">Sítio</label>
+        <select id="espFiltroSitio" style="width:auto;"></select>
+      </div>
+      <div>
+        <label style="margin-bottom:0;display:inline;">Lote</label>
+        <select id="espFiltroLote" style="width:auto;"></select>
+      </div>
+      <div>
+        <label style="margin-bottom:0;display:inline;">DAP</label>
+        <select id="espFiltroDap" style="width:auto;">
+          <option value="">Todas</option>
+          <option value="DAP1">DAP1</option>
+          <option value="DAP2">DAP2</option>
+          <option value="DAP3">DAP3</option>
+          <option value="Hotlist/Comercial">Hotlist/Comercial</option>
+          <option value="__sem__">Sem classificação</option>
+        </select>
+      </div>
+      <div>
+        <label style="margin-bottom:0;display:inline;">Hotlist</label>
+        <select id="espFiltroHotlist" style="width:auto;">
+          <option value="">Todas</option>
+          <option value="sim">Só Hotlist</option>
+          <option value="nao">Fora da Hotlist</option>
+        </select>
+      </div>
+      <button class="btn secondary no-print" onclick="exportarPDF('Espécies')">Exportar PDF</button>
+    </div>
+    <div class="list-total" id="espTotal"></div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="sortable" data-table="esp" data-key="especie">Espécie<span class="sort-arrow"></span></th>
+            <th class="num sortable" data-table="esp" data-key="qtde">Estoque<span class="sort-arrow"></span></th>
+            <th class="num sortable" data-table="esp" data-key="sitios">Sítio<span class="sort-arrow"></span></th>
+            <th class="num sortable" data-table="esp" data-key="lotes">Lote<span class="sort-arrow"></span></th>
+            <th>DAP</th>
+          </tr>
+        </thead>
+        <tbody id="espBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- LISTA DE INTERESSE MANEQUINHO -->
+  <div class="panel" id="panel-interesse">
+    <div class="toolbar">
+      <input type="text" id="interesseBusca" placeholder="Buscar espécie...">
+      <select id="interesseFiltroStatus" style="width:auto;">
+        <option value="">Todas</option>
+        <option value="tem">Já no estoque</option>
+        <option value="nao">Ainda não temos</option>
+      </select>
+      <button class="btn secondary no-print" onclick="exportarPDF('Hotlist')">Exportar PDF</button>
+    </div>
+    <div class="list-total" id="interesseTotal"></div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="sortable" data-table="interesse" data-key="comum">Nome popular<span class="sort-arrow"></span></th>
+            <th class="sortable" data-table="interesse" data-key="cientifico">Nome científico<span class="sort-arrow"></span></th>
+            <th>Status</th>
+            <th class="num sortable" data-table="interesse" data-key="qtde">#Mudas em Estoque<span class="sort-arrow"></span></th>
+          </tr>
+        </thead>
+        <tbody id="interesseBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- VENDAS -->
+  <div class="panel" id="panel-vendas">
+    <div class="toolbar">
+      <input type="text" id="vendasBusca" placeholder="Buscar espécie...">
+      <div>
+        <label style="margin-bottom:0;display:inline;">Comprador</label>
+        <select id="vendasFiltroComprador" style="width:auto;"></select>
+      </div>
+      <div>
+        <label style="margin-bottom:0;display:inline;">Data</label>
+        <select id="vendasFiltroData" style="width:auto;"></select>
+      </div>
+      <button class="btn secondary no-print" onclick="exportarPDF('Vendas')">Exportar PDF</button>
+    </div>
+    <div class="summary" style="margin-top:0;margin-bottom:16px;">
+      <div class="summary-row">
+        <div class="metric">
+          <div class="metric-label">Total vendido</div>
+          <div class="metric-value" id="vendasTotalMudas">0</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Vendas registradas</div>
+          <div class="metric-value" id="vendasTotalRegistros">0</div>
+        </div>
+      </div>
+    </div>
+    <div class="section-title" style="font-size:15px;">Resumo por comprador</div>
+    <div class="table-wrap" style="margin-bottom:8px;">
+      <table>
+        <thead>
+          <tr>
+            <th>Comprador</th>
+            <th class="num">Valor bruto vendido</th>
+            <th class="num">Valor pago</th>
+            <th class="num">Valor a receber</th>
+          </tr>
+        </thead>
+        <tbody id="vendasPorCompradorBody"></tbody>
+      </table>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:22px;">
+      <label style="margin-bottom:0;" for="vendasDataReferencia">Data de referência:</label>
+      <input type="date" id="vendasDataReferencia" style="width:auto;font-size:12.5px;padding:6px 8px;">
+      <button class="btn secondary no-print" id="vendasDataReferenciaReset" style="font-size:12px;padding:6px 10px;">Voltar para hoje</button>
+    </div>
+    <div id="vendasGroups"></div>
+  </div>
+
+  <!-- LISTA DE ESPÉCIES NATIVA_MUNICIPIO -->
+  <div class="panel" id="panel-nativas">
+    <div class="toolbar">
+      <input type="text" id="nativasBusca" placeholder="Buscar por espécie, nome popular ou família...">
+      <button class="btn secondary no-print" onclick="exportarPDF('Espécies Nativas')">Exportar PDF</button>
+    </div>
+    <div class="list-total" id="nativasTotal"></div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th class="sortable" data-table="nativas" data-key="familia">Família<span class="sort-arrow"></span></th>
+            <th class="sortable" data-table="nativas" data-key="cientifico">Nome científico<span class="sort-arrow"></span></th>
+            <th>Sinônimo</th>
+            <th class="sortable" data-table="nativas" data-key="popular">Nome popular<span class="sort-arrow"></span></th>
+          </tr>
+        </thead>
+        <tbody id="nativasBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- INVESTIMENTOS -->
+  <div class="panel" id="panel-investimentos">
+    <div class="tabs" id="invSubTabs" style="margin-top:0;">
+      <button class="tab active" data-invtab="lancamentos">Lançamentos</button>
+      <button class="tab" data-invtab="resumo">Resumo Mensal</button>
+      <button class="tab" data-invtab="custo">Custo Unitário</button>
+      <button class="tab" data-invtab="mudas">Estoque de Mudas</button>
+      <button class="tab" data-invtab="evolucao">Evolução Conta Capital</button>
+    </div>
+
+    <!-- Lançamentos -->
+    <div class="panel active" id="invpanel-lancamentos">
+      <div class="toolbar">
+        <input type="text" id="invBusca" placeholder="Buscar por referência ou fornecedor...">
+        <div>
+          <label style="margin-bottom:0;display:inline;">Categoria</label>
+          <select id="invFiltroCategoria" style="width:auto;"></select>
+        </div>
+        <div>
+          <label style="margin-bottom:0;display:inline;">Mês</label>
+          <select id="invFiltroMes" style="width:auto;"></select>
+        </div>
+        <button class="btn secondary no-print" onclick="exportarPDF('Investimentos — Lançamentos')">Exportar PDF</button>
+      </div>
+      <div class="list-total" id="invTotal"></div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="sortable" data-table="inv" data-key="data">Data<span class="sort-arrow"></span></th>
+              <th class="sortable" data-table="inv" data-key="categoria">Categoria<span class="sort-arrow"></span></th>
+              <th>Referência</th>
+              <th>Fornecedor</th>
+              <th>Meio Pgto</th>
+              <th>Origem</th>
+              <th class="num sortable" data-table="inv" data-key="valor">Valor investido<span class="sort-arrow"></span></th>
+            </tr>
+          </thead>
+          <tbody id="invBody"></tbody>
+          <tfoot id="invFooterTotais" class="print-only-row"></tfoot>
+        </table>
+      </div>
+    </div>
+
+    <!-- Resumo Mensal -->
+    <div class="panel" id="invpanel-resumo">
+      <div class="toolbar">
+        <div>
+          <label style="margin-bottom:0;display:inline;">Mês</label>
+          <select id="resumoFiltroMes" style="width:auto;"><option value="">Todos os meses</option></select>
+        </div>
+        <button class="btn secondary no-print" onclick="exportarPDF('Investimentos — Resumo Mensal')">Exportar PDF</button>
+      </div>
+
+      <div id="invResumoAnualContainer"></div>
+
+      <div class="section-title" style="margin-top:32px;">Evolução do Custo Total Acumulado</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Mês</th>
+              <th class="num">Custo Acumulado Inicial</th>
+              <th class="num">Correção Financeira</th>
+              <th class="num">Investimento no Mês</th>
+              <th class="num">Abatimento (unid. recebidas)</th>
+              <th class="num">Custo Total Acumulado Atualizado</th>
+            </tr>
+          </thead>
+          <tbody id="extratoCustoAcumuladoBody"></tbody>
+          <tfoot id="extratoCustoAcumuladoFooter"></tfoot>
+        </table>
+      </div>
+      <div class="hint" style="margin:14px 0 0;">Extrato mês a mês: Inicial + Correção Financeira (juros 12% a.a.) + Investimento no Mês − Abatimento (custo das unidades recebidas) = Total Atualizado.</div>
+    </div>
+
+    <!-- Custo Unitário -->
+    <div class="panel" id="invpanel-custo">
+      <div class="toolbar">
+        <button class="btn secondary no-print" onclick="exportarPDF('Investimentos — Custo Unitário')">Exportar PDF</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Mês</th>
+              <th class="num">Custo total acumulado atualizado</th>
+              <th class="num">Valores a pagar</th>
+              <th class="num">Custo Total</th>
+              <th class="num">Mudas vendidas (no mês)</th>
+              <th class="num">Mudas plantadas</th>
+              <th class="num">Mudas perdidas</th>
+              <th class="num">Mudas inventariadas</th>
+              <th class="num">Custo unitário</th>
+            </tr>
+          </thead>
+          <tbody id="custoUnitarioBody"></tbody>
+        </table>
+      </div>
+      <div class="hint" style="margin:14px 0 0;">Só "Valores a pagar" é preenchido manualmente aqui — é uma <b>estimativa de custos futuros ainda não lançados</b>, usada só para sensibilizar o Custo Unitário (não entra no Custo Total Acumulado, que já vem real do Resumo Mensal). "Mudas inventariadas", "Mudas plantadas" e "Mudas perdidas" vêm da aba Estoque de Mudas (editáveis lá).</div>
+    </div>
+
+    <!-- Estoque de Mudas -->
+    <div class="panel" id="invpanel-mudas">
+      <div class="toolbar">
+        <button class="btn secondary no-print" onclick="exportarPDF('Investimentos — Estoque de Mudas')">Exportar PDF</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Mês</th>
+              <th class="num">Mudas em estoque</th>
+              <th class="num">Vendidas à receber</th>
+              <th class="num">Vendidas recebidas (no mês)</th>
+              <th class="num">Perdas (no mês)</th>
+              <th class="num">Novas mudas (adq./plantadas, no mês)</th>
+            </tr>
+          </thead>
+          <tbody id="estoqueMudasBody"></tbody>
+        </table>
+      </div>
+      <div class="hint" style="margin:14px 0 0;">
+        Fórmula: Mudas em estoque (mês anterior) − Vendidas recebidas (no mês) − Perdas (no mês) + Novas mudas (no mês) = Mudas em estoque.<br>
+        "Mudas em estoque" não é editável — é calculado automaticamente (meses históricos usam a inventariação já validada; a partir daí, rola em cadeia mês a mês). "Vendidas à receber" é só informativo (saldo em aberto, não entra na conta). "Perdas" e "Novas mudas" são preenchidos manualmente, por mês.
+      </div>
+    </div>
+
+    <!-- Evolução Conta Capital -->
+    <div class="panel" id="invpanel-evolucao">
+      <div class="toolbar">
+        <div>
+          <label style="margin-bottom:0;display:inline;">Mês</label>
+          <select id="evolucaoFiltroMes" style="width:auto;"><option value="">Todos os meses</option></select>
+        </div>
+        <button class="btn secondary no-print" onclick="exportarPDF('Investimentos — Evolução Conta Capital')">Exportar PDF</button>
+      </div>
+      <div class="hint" style="margin:0 0 14px;">
+        Conta Capital Pará: cresce por juros (12% a.a.) e por novos aportes da Pará; reduz só por amortizações pagas com recursos do Viveiro.<br>
+        Conta Capital Viveiro: soma simples (sem juros) dos investimentos pagos com recursos do Viveiro.<br>
+        Caixa/Investimento Viveiro: receita total do Viveiro (PIX + acerto de contas) ainda não usada, mais o rendimento financeiro do saldo aplicado — sobe com recebimentos e rendimento, desce com investimentos e amortizações.
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Mês</th>
+              <th class="num">Conta Capital Pará</th>
+              <th class="num">Conta Capital Viveiro</th>
+              <th class="num">Caixa/Investimento Viveiro</th>
+            </tr>
+          </thead>
+          <tbody id="evolContaCapitalBody"></tbody>
+        </table>
+      </div>
+
+      <div class="section-title" style="margin-top:32px;">Extrato: Caixa do Viveiro</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Mês</th>
+              <th class="num">Caixa Inicial</th>
+              <th class="num">+ Recebimentos do mês</th>
+              <th class="num">− Investimentos (viram Capital Viveiro)</th>
+              <th class="num">− Amortização (abate Capital Pará)</th>
+              <th class="num">+ Rendimento do Mês</th>
+              <th class="num">Caixa Final</th>
+            </tr>
+          </thead>
+          <tbody id="extratoCaixaViveiroBody"></tbody>
+        </table>
+      </div>
+
+      <div class="section-title" style="margin-top:32px;">Extrato: Conta Capital Viveiro</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Mês</th>
+              <th class="num">Capital Viveiro Inicial</th>
+              <th class="num">+ Investimentos pagos com recursos do Viveiro no mês</th>
+              <th class="num">Capital Viveiro Final</th>
+            </tr>
+          </thead>
+          <tbody id="extratoCapitalViveiroBody"></tbody>
+        </table>
+      </div>
+
+      <div class="section-title" style="margin-top:32px;">Extrato: Conta Capital Pará</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Mês</th>
+              <th class="num">Capital Pará Inicial</th>
+              <th class="num">+ Correção Financeira (juros 12% a.a.)</th>
+              <th class="num">+ Aportes Pará no mês</th>
+              <th class="num">− Amortização (paga com recursos do Viveiro)</th>
+              <th class="num">Capital Pará Final</th>
+            </tr>
+          </thead>
+          <tbody id="extratoCapitalParaBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<div class="toast" id="toast"></div>
+
+<div id="modalOverlay" style="display:none;position:fixed;inset:0;background:rgba(34,40,31,0.5);z-index:100;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:var(--paper);border-radius:14px;max-width:520px;width:100%;max-height:80vh;overflow-y:auto;padding:22px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <h3 id="modalTitulo" style="font-family:'Fraunces',serif;font-size:18px;color:var(--forest);margin:0;"></h3>
+      <button onclick="fecharModal()" class="no-print" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--ink-faint);line-height:1;">&times;</button>
+    </div>
+    <div id="modalConteudo"></div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'movimentacoes';
+const SEED = [{"evento": "Entrada", "especie": "MIRINDIBA", "qtde": 1, "sitio": "1", "lote": "1", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "PAU VIOLA", "qtde": 38, "sitio": "1", "lote": "1", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "ALBIZIA", "qtde": 90, "sitio": "1", "lote": "1", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "CANAFÍSTULA", "qtde": 90, "sitio": "1", "lote": "1", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "PAU JACARE", "qtde": 100, "sitio": "1", "lote": "1", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "BABOSA", "qtde": 143, "sitio": "1", "lote": "1", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "INGÁ BRANCO", "qtde": 149, "sitio": "1", "lote": "1", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "CHAU CHAU", "qtde": 150, "sitio": "1", "lote": "1", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "CANUDO DE PITO", "qtde": 151, "sitio": "1", "lote": "1", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "ACASSIA VERMELHA", "qtde": 152, "sitio": "1", "lote": "1", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "INGÁ FEIJÃO", "qtde": 359, "sitio": "1", "lote": "1", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "RESEDÁ", "qtde": 406, "sitio": "1", "lote": "1", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "SANGRA D'AGUA", "qtde": 1, "sitio": "1", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "CORESMEIRA", "qtde": 5, "sitio": "1", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "BABOSA", "qtde": 6, "sitio": "1", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "ALBIZIA", "qtde": 14, "sitio": "1", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "CAROBA", "qtde": 36, "sitio": "1", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "EMBAÚBA", "qtde": 38, "sitio": "1", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "GUARANTÃ", "qtde": 51, "sitio": "1", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "JEQUITIBÁ", "qtde": 90, "sitio": "1", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "CAPIXINGUI", "qtde": 96, "sitio": "1", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "CAMBARÁ", "qtde": 99, "sitio": "1", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "GUAPURUVU", "qtde": 100, "sitio": "1", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "JACARANDÁ MIMOSO", "qtde": 100, "sitio": "1", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "TAMBORIL", "qtde": 101, "sitio": "1", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "PAU JANGADA", "qtde": 102, "sitio": "1", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "AROEIRA PIMENTEIRA", "qtde": 103, "sitio": "1", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "URUCUM", "qtde": 103, "sitio": "1", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "PAU FORMIGA", "qtde": 104, "sitio": "1", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "PAU FERRO", "qtde": 106, "sitio": "1", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "RESEDÁ", "qtde": 121, "sitio": "1", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "MIRINDIBA", "qtde": 122, "sitio": "1", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "ÁRVORE FOLHA LARGA", "qtde": 149, "sitio": "1", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "CANAFÍSTULA", "qtde": 331, "sitio": "1", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "CAMBARÁ", "qtde": 1, "sitio": "1", "lote": "3", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "PAU FORMIGA", "qtde": 1, "sitio": "1", "lote": "3", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "INGÁ BRANCO", "qtde": 1, "sitio": "1", "lote": "3", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "CORESMEIRA", "qtde": 2, "sitio": "1", "lote": "3", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "INGÁ FEIJÃO", "qtde": 3, "sitio": "1", "lote": "3", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "CAPOROROCA", "qtde": 3, "sitio": "1", "lote": "3", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "IPÊ ROXO", "qtde": 84, "sitio": "1", "lote": "3", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "IPÊ BRANCO", "qtde": 87, "sitio": "1", "lote": "3", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "ACOITA CAVALO", "qtde": 101, "sitio": "1", "lote": "3", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "MIRINDIBA", "qtde": 144, "sitio": "1", "lote": "3", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "IPÊ VERDE", "qtde": 152, "sitio": "1", "lote": "3", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "IPÊ AMARELO", "qtde": 291, "sitio": "1", "lote": "3", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "PAU MULATO", "qtde": 619, "sitio": "1", "lote": "3", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "ACEROLA", "qtde": 2, "sitio": "1", "lote": "4", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "CAMBUCA", "qtde": 51, "sitio": "1", "lote": "4", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "GABIROBA", "qtde": 268, "sitio": "1", "lote": "4", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "PITANGA", "qtde": 468, "sitio": "1", "lote": "4", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "IPÊ AMARELO", "qtde": 6, "sitio": "1", "lote": "5", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "PAU VIOLA", "qtde": 31, "sitio": "1", "lote": "5", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "PITANGA", "qtde": 34, "sitio": "1", "lote": "5", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "GOIABA", "qtde": 77, "sitio": "1", "lote": "5", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "SANGRA D'AGUA", "qtde": 125, "sitio": "1", "lote": "5", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "JACARANDÁ CAROBA", "qtde": 150, "sitio": "1", "lote": "5", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "FALSO BARBATIMÃO", "qtde": 151, "sitio": "1", "lote": "5", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "PAINEIRA", "qtde": 152, "sitio": "1", "lote": "5", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "JEQUITIBÁ", "qtde": 200, "sitio": "1", "lote": "5", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "PAU BRASIL", "qtde": 251, "sitio": "1", "lote": "5", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "AROEIRA PIMENTEIRA", "qtde": 291, "sitio": "1", "lote": "5", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "ACASSIA", "qtde": 300, "sitio": "1", "lote": "5", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "ACASSIA JAVANICA", "qtde": 300, "sitio": "1", "lote": "5", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "PAU FORMIGA", "qtde": 301, "sitio": "1", "lote": "5", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "JACARANDÁ MIMOSO", "qtde": 301, "sitio": "1", "lote": "5", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "CANAFÍSTULA", "qtde": 305, "sitio": "1", "lote": "5", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "CAPOROROCA", "qtde": 311, "sitio": "1", "lote": "5", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "DEDALEIRO", "qtde": 317, "sitio": "1", "lote": "5", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "FLAMBOIÃ ARVORE", "qtde": 322, "sitio": "1", "lote": "5", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "MIRINDIBA", "qtde": 370, "sitio": "1", "lote": "5", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "PAU FERRO", "qtde": 96, "sitio": "2", "lote": "1", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "IPÊ BRANCO", "qtde": 1440, "sitio": "2", "lote": "1", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "PATA DE VACA", "qtde": 6, "sitio": "2", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "TAMBORIL", "qtde": 100, "sitio": "2", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "ERETRINA", "qtde": 100, "sitio": "2", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "ALGODOEIRO", "qtde": 123, "sitio": "2", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "EMBAÚBA", "qtde": 158, "sitio": "2", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "IPÊ ROXO", "qtde": 200, "sitio": "2", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "JACARANDÁ", "qtde": 201, "sitio": "2", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "ANGICO", "qtde": 209, "sitio": "2", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "PAU VIOLA", "qtde": 231, "sitio": "2", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "INGÁ", "qtde": 250, "sitio": "2", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "JEQUITIBÁ", "qtde": 300, "sitio": "2", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "IPÊ BRANCO", "qtde": 800, "sitio": "2", "lote": "2", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "PAINEIRA", "qtde": 100, "sitio": "2", "lote": "3", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "DEDALEIRO", "qtde": 103, "sitio": "2", "lote": "3", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "CALISTEMO", "qtde": 205, "sitio": "2", "lote": "3", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "IPÊ ROSA", "qtde": 297, "sitio": "2", "lote": "3", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "IPÊ ROXO", "qtde": 677, "sitio": "2", "lote": "3", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "IPÊ AMARELO", "qtde": 967, "sitio": "2", "lote": "3", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "PATA DE VACA", "qtde": 969, "sitio": "2", "lote": "3", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "RESEDÁ", "qtde": 300, "sitio": "Área de acesso", "lote": "Área de acesso", "data": "27/05/2026"}, {"evento": "Entrada", "especie": "GABIROBA", "qtde": 100, "sitio": "3", "lote": "1", "data": "01/08/2026"}, {"evento": "Entrada", "especie": "ACEROLA", "qtde": 200, "sitio": "3", "lote": "1", "data": "01/08/2026"}, {"evento": "Entrada", "especie": "CABELUDINHA", "qtde": 213, "sitio": "3", "lote": "1", "data": "01/08/2026"}, {"evento": "Entrada", "especie": "CEREJA DO RIO GRANDE", "qtde": 57, "sitio": "3", "lote": "2", "data": "01/08/2026"}, {"evento": "Entrada", "especie": "CABELUDINHA", "qtde": 81, "sitio": "3", "lote": "2", "data": "01/08/2026"}, {"evento": "Entrada", "especie": "IPÊ AMARELO DE JARDIM", "qtde": 92, "sitio": "3", "lote": "2", "data": "01/08/2026"}, {"evento": "Entrada", "especie": "ANGICO VERMELHO", "qtde": 100, "sitio": "3", "lote": "2", "data": "01/08/2026"}, {"evento": "Entrada", "especie": "ARAÇÁ AMARELO", "qtde": 200, "sitio": "3", "lote": "2", "data": "01/08/2026"}, {"evento": "Entrada", "especie": "PAU REI", "qtde": 71, "sitio": "3", "lote": "3", "data": "01/08/2026"}, {"evento": "Entrada", "especie": "OTIL", "qtde": 101, "sitio": "3", "lote": "3", "data": "01/08/2026"}, {"evento": "Entrada", "especie": "IPÊ DE JARDIM", "qtde": 106, "sitio": "3", "lote": "3", "data": "01/08/2026"}, {"evento": "Entrada", "especie": "ARAÇÁ BOI", "qtde": 100, "sitio": "3", "lote": "4", "data": "01/08/2026"}, {"evento": "Entrada", "especie": "CEREJA", "qtde": 100, "sitio": "3", "lote": "4", "data": "01/08/2026"}, {"evento": "Entrada", "especie": "ARAÇÁ ROXO", "qtde": 100, "sitio": "3", "lote": "5", "data": "01/08/2026"}, {"evento": "Entrada", "especie": "ARAÇÁ VERMELHO", "qtde": 100, "sitio": "3", "lote": "5", "data": "01/08/2026"}, {"evento": "Entrada", "especie": "AMORA", "qtde": 152, "sitio": "3", "lote": "5", "data": "01/08/2026"}, {"evento": "Entrada", "especie": "GOIABA", "qtde": 209, "sitio": "3", "lote": "5", "data": "01/08/2026"}, {"evento": "Saída", "especie": "ACOITA CAVALO", "qtde": -40, "sitio": "1", "lote": "3", "data": "30/07/2026", "comprador": "Boa Esperança", "precoUnitario": 120, "pago": false}, {"evento": "Saída", "especie": "GUAPURUVU", "qtde": -26, "sitio": "1", "lote": "2", "data": "30/07/2026", "comprador": "Boa Esperança", "precoUnitario": 120, "pago": false}, {"evento": "Saída", "especie": "ACASSIA VERMELHA", "qtde": -25, "sitio": "1", "lote": "1", "data": "01/07/2026", "comprador": "Boa Esperança", "precoUnitario": 120, "pago": false}, {"evento": "Saída", "especie": "EMBAÚBA", "qtde": -15, "sitio": "1", "lote": "2", "data": "01/07/2026", "comprador": "Boa Esperança", "precoUnitario": 120, "pago": false}, {"evento": "Saída", "especie": "TAMBORIL", "qtde": -15, "sitio": "1", "lote": "2", "data": "01/07/2026", "comprador": "Boa Esperança", "precoUnitario": 120, "pago": false}, {"evento": "Saída", "especie": "BABOSA", "qtde": -42, "sitio": "1", "lote": "1", "data": "04/09/2026", "comprador": "Pará", "precoUnitario": 90, "pago": false}, {"evento": "Saída", "especie": "PAU JACARE", "qtde": -33, "sitio": "1", "lote": "1", "data": "04/09/2026", "comprador": "Pará", "precoUnitario": 90, "pago": false}, {"evento": "Saída", "especie": "AROEIRA PIMENTEIRA", "qtde": -44, "sitio": "1", "lote": "2", "data": "04/09/2026", "comprador": "Pará", "precoUnitario": 90, "pago": false}];
+const INTERESSE = [{"comum": "Abiu", "cientifico": "Pouteria caimito", "norm": "abiu"}, {"comum": "Açoita-cavalo", "cientifico": "Luehea candicans", "norm": "acoitacavalo"}, {"comum": "Amendoim-do-campo", "cientifico": "Platypodium elegans", "norm": "amendoimdocampo"}, {"comum": "Angelim-da-folha-grande", "cientifico": "Andira fraxinifolia", "norm": "angelimdafolhagrande"}, {"comum": "Angico", "cientifico": "Anadenanthera sp.", "norm": "angico"}, {"comum": "Araucária", "cientifico": "Araucaria angustifolia", "norm": "araucaria"}, {"comum": "Araçá", "cientifico": "Psidium cattleyanum (MF)", "norm": "araca"}, {"comum": "Araçá-roxo", "cientifico": "Psidium myrtoides (MF)", "norm": "aracaroxo"}, {"comum": "Araribá", "cientifico": "Centrolobium tomentosum", "norm": "arariba"}, {"comum": "Aroeira-salsa", "cientifico": "Schinus molle", "norm": "aroeirasalsa"}, {"comum": "Aroeira-pimenteira", "cientifico": "", "norm": "aroeirapimenteira"}, {"comum": "Aroeira-branca", "cientifico": "Lithraea molleoides", "norm": "aroeirabranca"}, {"comum": "Aroeira-vermelha", "cientifico": "Astronium fraxinifolium", "norm": "aroeiravermelha"}, {"comum": "Araçá-Amarelo (MF)", "cientifico": "", "norm": "aracaamarelomf"}, {"comum": "Araçá-piranga (MF)", "cientifico": "", "norm": "aracapirangamf"}, {"comum": "Araçá-roxo", "cientifico": "Psidium myrtoides", "norm": "aracaroxo"}, {"comum": "Babosa-branca", "cientifico": "Cordia superba", "norm": "babosabranca"}, {"comum": "Bacupari", "cientifico": "Garcinia gardneiana (MF)", "norm": "bacupari"}, {"comum": "Baru", "cientifico": "Dipteryx alata", "norm": "baru"}, {"comum": "Bracaatinga", "cientifico": "Mimosa scabrella", "norm": "bracaatinga"}, {"comum": "Bico-de-papagaio", "cientifico": "Erythrina falcata", "norm": "bicodepapagaio"}, {"comum": "Branquilho", "cientifico": "Gymnanthes klotzschiana", "norm": "branquilho"}, {"comum": "Cabeludinha", "cientifico": "Myrciaria glazioviana (MF)", "norm": "cabeludinha"}, {"comum": "Cabreúva", "cientifico": "Myroxylon peruiferum", "norm": "cabreuva"}, {"comum": "Café-de-bugre", "cientifico": "Cordia ecalyculata", "norm": "cafedebugre"}, {"comum": "Cambucá", "cientifico": "Plinia edulis (MF)", "norm": "cambuca"}, {"comum": "Cambuci", "cientifico": "Campomanesia phaea", "norm": "cambuci"}, {"comum": "Camu-camu", "cientifico": "Myrciaria dubia", "norm": "camucamu"}, {"comum": "Canela-amarela", "cientifico": "Nectandra lanceolata", "norm": "canelaamarela"}, {"comum": "Carobinha", "cientifico": "Jacaranda puberula", "norm": "carobinha"}, {"comum": "Cereja-roxa", "cientifico": "Eugenia candolleana (MF)", "norm": "cerejaroxa"}, {"comum": "Cereja-do-Rio-Grande", "cientifico": "Eugenia involucrata (MF)", "norm": "cerejadoriogrande"}, {"comum": "Chal-chal", "cientifico": "Allophylus edulis", "norm": "chalchal"}, {"comum": "Chichá", "cientifico": "Sterculia curiosa", "norm": "chicha"}, {"comum": "Chuva-de-ouro", "cientifico": "Cassia ferruginea", "norm": "chuvadeouro"}, {"comum": "Copaíba", "cientifico": "Copaifera langsdorffii", "norm": "copaiba"}, {"comum": "Coração-de-negro", "cientifico": "Poecilanthe parviflora", "norm": "coracaodenegro"}, {"comum": "Dedaleiro", "cientifico": "Lafoensia pacari", "norm": "dedaleiro"}, {"comum": "Embira-de-sapo", "cientifico": "Dahlstedtia muehlbergiana", "norm": "embiradesapo"}, {"comum": "Eritrina-verna", "cientifico": "Erythrina verna", "norm": "eritrinaverna"}, {"comum": "Eritrina-falcata", "cientifico": "", "norm": "eritrinafalcata"}, {"comum": "Farinha-seca", "cientifico": "Albizia niopoides", "norm": "farinhaseca"}, {"comum": "Guabiju", "cientifico": "Myrcianthes pungens", "norm": "guabiju"}, {"comum": "Guabiroba-branca", "cientifico": "Campomanesia neriiflora", "norm": "guabirobabranca"}, {"comum": "Guaçatonga", "cientifico": "Casearia sylvestris", "norm": "guacatonga"}, {"comum": "Guajuvira", "cientifico": "Cordia americana", "norm": "guajuvira"}, {"comum": "Guamirim", "cientifico": "Myrcia splendens", "norm": "guamirim"}, {"comum": "Guanandi", "cientifico": "Calophyllum brasiliense (DAP 3)", "norm": "guanandi"}, {"comum": "Guaperê", "cientifico": "Lamanonia ternata", "norm": "guapere"}, {"comum": "Guaraiuva", "cientifico": "Savia dictyocarpa", "norm": "guaraiuva"}, {"comum": "Guaritá", "cientifico": "Astronium graveolens", "norm": "guarita"}, {"comum": "Guarantã", "cientifico": "Esenbeckia leiocarpa", "norm": "guaranta"}, {"comum": "Guatambu", "cientifico": "Aspidosperma ramiflorum", "norm": "guatambu"}, {"comum": "Guabiroba-branca", "cientifico": "Campomanesia neriiflora", "norm": "guabirobabranca"}, {"comum": "Guaxupita", "cientifico": "Esenbeckia grandiflora", "norm": "guaxupita"}, {"comum": "Guariroba", "cientifico": "Syagrus oleracea", "norm": "guariroba"}, {"comum": "Goiaba-serrana", "cientifico": "Acca sellowiana", "norm": "goiabaserrana"}, {"comum": "Ingá-ferradura", "cientifico": "Inga sessilis", "norm": "ingaferradura"}, {"comum": "Ingarana", "cientifico": "Zygia latifolia", "norm": "ingarana"}, {"comum": "Indaiá", "cientifico": "Attalea dubia", "norm": "indaia"}, {"comum": "Ingá", "cientifico": "Inga vera", "norm": "inga"}, {"comum": "Ingá-feijão", "cientifico": "Inga marginata", "norm": "ingafeijao"}, {"comum": "Ipê-amarelo", "cientifico": "Handroanthus chrysotrichus", "norm": "ipeamarelo"}, {"comum": "Ipê-amarelo-da-serra", "cientifico": "Handroanthus albus", "norm": "ipeamarelodaserra"}, {"comum": "Ipê-amarelo-do-cerrado", "cientifico": "Tabebuia ochracea", "norm": "ipeamarelodocerrado"}, {"comum": "Ipê-cascudo", "cientifico": "Handroanthus vellosoi", "norm": "ipecascudo"}, {"comum": "Ipê-tabaco", "cientifico": "Zeyheria tuberculosa", "norm": "ipetabaco"}, {"comum": "Ipê-verde", "cientifico": "Cybistax antisyphilitica", "norm": "ipeverde"}, {"comum": "Ipê-roxo-de-bola", "cientifico": "Handroanthus impetiginosus", "norm": "iperoxodebola"}, {"comum": "Jabuticaba", "cientifico": "Myrciaria cauliflora", "norm": "jabuticaba"}, {"comum": "Jacarandá-de-espinho", "cientifico": "Machaerium hirtum", "norm": "jacarandadeespinho"}, {"comum": "Jacarandá-do-campo", "cientifico": "Machaerium acutifolium", "norm": "jacarandadocampo"}, {"comum": "Jacarandá-da-bahia", "cientifico": "Dalbergia nigra", "norm": "jacarandadabahia"}, {"comum": "Jacarandá-ferro", "cientifico": "Machaerium scleroxylon", "norm": "jacarandaferro"}, {"comum": "Jaracatiá", "cientifico": "Jacaratia spinosa", "norm": "jaracatia"}, {"comum": "Jatobá", "cientifico": "Hymenaea courbaril", "norm": "jatoba"}, {"comum": "Jerivá", "cientifico": "Syagrus romanzoffiana", "norm": "jeriva"}, {"comum": "Leiteiro", "cientifico": "Sapium glandulosum", "norm": "leiteiro"}, {"comum": "Licurana", "cientifico": "Hyeronima alchorneoides", "norm": "licurana"}, {"comum": "Lixeira", "cientifico": "Aloysia virgata", "norm": "lixeira"}, {"comum": "Manacá-da-serra", "cientifico": "Pleroma mutabile", "norm": "manacadaserra"}, {"comum": "Louro-pardo", "cientifico": "Cordia trichotoma", "norm": "louropardo"}, {"comum": "Manduirana", "cientifico": "Senna macranthera", "norm": "manduirana"}, {"comum": "Monguba", "cientifico": "Pachira aquatica", "norm": "monguba"}, {"comum": "Maria-mole / embirutó", "cientifico": "Dendropanax cuneatus", "norm": "mariamoleembiruto"}, {"comum": "Maria-preta", "cientifico": "Diatenopteryx sorbifolia", "norm": "mariapreta"}, {"comum": "Maricá", "cientifico": "Mimosa bimucronata", "norm": "marica"}, {"comum": "Marinheiro", "cientifico": "Guarea guidonia", "norm": "marinheiro"}, {"comum": "Oiti", "cientifico": "Moquilea tomentosa", "norm": "oiti"}, {"comum": "Palmito-jussara", "cientifico": "Euterpe edulis", "norm": "palmitojussara"}, {"comum": "Pata de vaca", "cientifico": "Bauhinia variegata", "norm": "patadevaca"}, {"comum": "Pau-brasil", "cientifico": "Paubrasilia echinata", "norm": "paubrasil"}, {"comum": "Pau-cigarra", "cientifico": "Senna multijuga", "norm": "paucigarra"}, {"comum": "Pau-de-rosas", "cientifico": "Physocalymma scaberrimum", "norm": "pauderosas"}, {"comum": "Pau-jacaré", "cientifico": "Piptadenia gonoacantha", "norm": "paujacare"}, {"comum": "Pau-viola", "cientifico": "Citharexylum myrianthum", "norm": "pauviola"}, {"comum": "Pitomba", "cientifico": "Eugenia luschnathiana (MF)", "norm": "pitomba"}, {"comum": "Pixirica", "cientifico": "Miconia sp.", "norm": "pixirica"}, {"comum": "Pêssego-do-mato", "cientifico": "Eugenia myrcianthes (MF)", "norm": "pessegodomato"}, {"comum": "Pitanga", "cientifico": "Eugenia uniflora", "norm": "pitanga"}, {"comum": "Pitomba", "cientifico": "Eugenia luschnathiana (MF)", "norm": "pitomba"}, {"comum": "Pupunha", "cientifico": "Bactris gasipaes", "norm": "pupunha"}, {"comum": "Quatinga", "cientifico": "Ouratea parviflora", "norm": "quatinga"}, {"comum": "Sete-cascas", "cientifico": "Samanea tubulosa", "norm": "setecascas"}, {"comum": "Sucupira", "cientifico": "Pterodon emarginatus", "norm": "sucupira"}, {"comum": "Sete-capote", "cientifico": "Campomanesia guazumifolia", "norm": "setecapote"}, {"comum": "Sombreiro", "cientifico": "Clitoria fairchildiana", "norm": "sombreiro"}, {"comum": "Tingui-preto", "cientifico": "Dictyoloma vandellianum", "norm": "tinguipreto"}, {"comum": "Uvaia", "cientifico": "Eugenia pyriformis (MF)", "norm": "uvaia"}, {"comum": "Unha-de-vaca", "cientifico": "Bauhinia longifolia", "norm": "unhadevaca"}, {"comum": "Vassoura", "cientifico": "Baccharis singularis", "norm": "vassoura"}, {"comum": "Vassourão / canela-branca", "cientifico": "Piptocarpha macropoda", "norm": "vassouraocanelabranca"}];
+const NATIVAS = [{"familia": "ANACARDIACEAE", "cientifico": "Astronium graveolens", "sinonimo": "", "popular": "guaritá"}, {"familia": "ANACARDIACEAE", "cientifico": "Lithraea molleoides", "sinonimo": "", "popular": "aroeira-brava"}, {"familia": "ANACARDIACEAE", "cientifico": "Schinus terebinthifolius", "sinonimo": "", "popular": "aroeira-mansa"}, {"familia": "ANACARDIACEAE", "cientifico": "Tapirira guianensis", "sinonimo": "", "popular": "fruta-de-pombo, tapiriri"}, {"familia": "ANNONACEAE", "cientifico": "Annona emarginata", "sinonimo": "", "popular": "araticunzinho"}, {"familia": "ANNONACEAE", "cientifico": "Annona neosericea", "sinonimo": "Rollinia sericea", "popular": "araticum-alvadio, pinha-da-mata"}, {"familia": "ANNONACEAE", "cientifico": "Duguetia lanceolata", "sinonimo": "", "popular": "pindaíba"}, {"familia": "ANNONACEAE", "cientifico": "Guatteria australis", "sinonimo": "", "popular": "pindaíba-preta"}, {"familia": "ANNONACEAE", "cientifico": "Xylopia brasiliensis", "sinonimo": "", "popular": "pindaubuna"}, {"familia": "APOCYNACEAE", "cientifico": "Aspidosperma olivaceum", "sinonimo": "", "popular": "guatambu-mirim"}, {"familia": "APOCYNACEAE", "cientifico": "Aspidosperma polyneuron", "sinonimo": "", "popular": "peroba-rosa"}, {"familia": "APOCYNACEAE", "cientifico": "Aspidosperma ramiflorum", "sinonimo": "", "popular": "guatambu"}, {"familia": "APOCYNACEAE", "cientifico": "Aspidosperma riedelii", "sinonimo": "", "popular": "guatambuzinho"}, {"familia": "APOCYNACEAE", "cientifico": "Tabernaemontana catharinensis", "sinonimo": "", "popular": "leiteiro"}, {"familia": "AQUIFOLIACEAE", "cientifico": "Ilex dumosa", "sinonimo": "Ilex amara", "popular": "caúna"}, {"familia": "ARECACEAE", "cientifico": "Acrocomia aculeata", "sinonimo": "", "popular": "macaúba"}, {"familia": "ARECACEAE", "cientifico": "Euterpe edulis", "sinonimo": "", "popular": "palmito"}, {"familia": "ARECACEAE", "cientifico": "Geonoma schottiana", "sinonimo": "", "popular": "aricanga"}, {"familia": "ARECACEAE", "cientifico": "Lytocaryum hoehnei", "sinonimo": "", "popular": "palmeira-prateada"}, {"familia": "ARECACEAE", "cientifico": "Syagrus romanzoffiiana", "sinonimo": "", "popular": "jerivá"}, {"familia": "ASTERACEAE", "cientifico": "Baccharis singularis", "sinonimo": "Baccharis cassiniifolia", "popular": "vassoura"}, {"familia": "ASTERACEAE", "cientifico": "Gochnatia polymorpha", "sinonimo": "", "popular": "vassourão-branco, cambará"}, {"familia": "ASTERACEAE", "cientifico": "Piptocarpha macropoda", "sinonimo": "", "popular": "vassourão"}, {"familia": "ASTERACEAE", "cientifico": "Vernonanthura discolor", "sinonimo": "Vernonia discolor", "popular": "vassourão-preto"}, {"familia": "BIGNONIACEAE", "cientifico": "Cybistax antisyphilitica", "sinonimo": "", "popular": "ipê-verde"}, {"familia": "BIGNONIACEAE", "cientifico": "Handroanthus chrysotrichus", "sinonimo": "Tabebuia chrysotricha", "popular": "ipê-amarelo"}, {"familia": "BIGNONIACEAE", "cientifico": "Handroanthus heptaphyllus", "sinonimo": "Tabebuia heptaphylla", "popular": "ipê-roxo-de-sete-folhas"}, {"familia": "BIGNONIACEAE", "cientifico": "Handroanthus impetiginosus", "sinonimo": "Tabebuia impetiginosa", "popular": "ipê-roxo-de-bola"}, {"familia": "BIGNONIACEAE", "cientifico": "Handroanthus umbellatus", "sinonimo": "Tabebuia umbellata", "popular": "ipê-amarelo-do-brejo"}, {"familia": "BIGNONIACEAE", "cientifico": "Handroanthus vellosoi", "sinonimo": "Tabebuia vellosoi", "popular": "ipê-amarelo-de-casca-lisa"}, {"familia": "BIGNONIACEAE", "cientifico": "Jacaranda caroba", "sinonimo": "", "popular": "caroba"}, {"familia": "BIGNONIACEAE", "cientifico": "Jacaranda cuspidifolia", "sinonimo": "", "popular": "caroba"}, {"familia": "BIGNONIACEAE", "cientifico": "Jacaranda puberula", "sinonimo": "", "popular": "caroba"}, {"familia": "BORAGINACEAE", "cientifico": "Cordia ecalyculata", "sinonimo": "", "popular": "café-de-bugre"}, {"familia": "BURSERACEAE", "cientifico": "Protium heptaphyllum", "sinonimo": "", "popular": "almecegueira"}, {"familia": "CANELLACEAE", "cientifico": "Cinnamodendron dinisii", "sinonimo": "Capsicodendron dinisii", "popular": "pimenteira"}, {"familia": "CANNABACEAE", "cientifico": "Trema micrantha", "sinonimo": "", "popular": "crindiúva"}, {"familia": "CARICACEAE", "cientifico": "Jacaratia spinosa", "sinonimo": "Jaracatia dodecaphylla", "popular": "jaracatiá"}, {"familia": "CELASTRACEAE", "cientifico": "Maytenus evonymoides", "sinonimo": "", "popular": "cafezinho"}, {"familia": "CELASTRACEAE", "cientifico": "Maytenus robusta", "sinonimo": "Maytenus alaternoides", "popular": "cafezinho"}, {"familia": "CHRYSOBALANACEAE", "cientifico": "Couepia venosa", "sinonimo": "", "popular": "figueira-branca"}, {"familia": "CHRYSOBALANACEAE", "cientifico": "Hirtella hebeclada", "sinonimo": "", "popular": "cinzeiro, macucurana"}, {"familia": "CLETHRACEAE", "cientifico": "Clethra scabra", "sinonimo": "", "popular": "guaperô, carne-de-vaca"}, {"familia": "CLUSIACEAE", "cientifico": "Clusia criuva", "sinonimo": "", "popular": "clúsia"}, {"familia": "CLUSIACEAE", "cientifico": "Garcinia gardneriana", "sinonimo": "", "popular": "bacupari"}, {"familia": "CONNARACEAE", "cientifico": "Connarus rostratus", "sinonimo": "", "popular": "falso-calcanhar-de-cotia"}, {"familia": "CUNONIACEAE", "cientifico": "Lamanonia ternata", "sinonimo": "", "popular": "guaperê"}, {"familia": "ELAEOCARPACEAE", "cientifico": "Sloanea hirsuta", "sinonimo": "Sloanea monosperma", "popular": "sapopemba"}, {"familia": "ERICACEAE", "cientifico": "Gaylussacia brasiliensis", "sinonimo": "", "popular": "camarinha"}, {"familia": "ERYTHROXYLACEAE", "cientifico": "Erythroxylum deciduum", "sinonimo": "", "popular": "fruta-de-pomba"}, {"familia": "EUPHORBIACEAE", "cientifico": "Alchornea sidifolia", "sinonimo": "", "popular": "tapiá-guaçu"}, {"familia": "EUPHORBIACEAE", "cientifico": "Alchornea triplinervia", "sinonimo": "", "popular": "tapiá-mirim"}, {"familia": "EUPHORBIACEAE", "cientifico": "Croton floribundus", "sinonimo": "", "popular": "capixingui"}, {"familia": "EUPHORBIACEAE", "cientifico": "Croton salutaris", "sinonimo": "", "popular": "caixeta"}, {"familia": "EUPHORBIACEAE", "cientifico": "Croton urucurana", "sinonimo": "", "popular": "sangra-d'água"}, {"familia": "EUPHORBIACEAE", "cientifico": "Gymnanthes klotzschiana", "sinonimo": "", "popular": "patereviú"}, {"familia": "FABACEAE", "cientifico": "Andira fraxinifolia", "sinonimo": "", "popular": "angelim-doce, pau-de-morcego"}, {"familia": "FABACEAE", "cientifico": "Bauhinia forficata", "sinonimo": "", "popular": "pata-de-vaca"}, {"familia": "FABACEAE", "cientifico": "Cassia ferruginea", "sinonimo": "", "popular": "chuva-de-ouro"}, {"familia": "FABACEAE", "cientifico": "Cassia leptophylla", "sinonimo": "", "popular": "falso-barbatimão"}, {"familia": "FABACEAE", "cientifico": "Centrolobium tomentosum", "sinonimo": "", "popular": "araribá"}, {"familia": "FABACEAE", "cientifico": "Copaifera langsdorffii", "sinonimo": "", "popular": "copaíba"}, {"familia": "FABACEAE", "cientifico": "Dalbergia villosa", "sinonimo": "", "popular": "canafístula-brava"}, {"familia": "FABACEAE", "cientifico": "Enterolobium contortisiliquum", "sinonimo": "", "popular": "tamboril"}, {"familia": "FABACEAE", "cientifico": "Erythrina crista-galli", "sinonimo": "", "popular": "corticeira"}, {"familia": "FABACEAE", "cientifico": "Erythrina falcata", "sinonimo": "", "popular": "mulungu"}, {"familia": "FABACEAE", "cientifico": "Erythrina speciosa", "sinonimo": "", "popular": "suinã"}, {"familia": "FABACEAE", "cientifico": "Hymenaea courbaril", "sinonimo": "Hymenaea stilbocarpa", "popular": "jatobá"}, {"familia": "FABACEAE", "cientifico": "Inga marginata", "sinonimo": "", "popular": "ingá-feijão"}, {"familia": "FABACEAE", "cientifico": "Inga sessilis", "sinonimo": "", "popular": "ingá-ferradura"}, {"familia": "FABACEAE", "cientifico": "Inga vera", "sinonimo": "Inga uruguensis", "popular": "ingá-do-brejo"}, {"familia": "FABACEAE", "cientifico": "Lonchocarpus muehlbergianus", "sinonimo": "", "popular": "embira-de-sapo"}, {"familia": "FABACEAE", "cientifico": "Machaerium hirtum", "sinonimo": "", "popular": "jacarandá-de-espinho"}, {"familia": "FABACEAE", "cientifico": "Machaerium nyctitans", "sinonimo": "", "popular": "bico-de-pato"}, {"familia": "FABACEAE", "cientifico": "Machaerium stipitatum", "sinonimo": "", "popular": "marmeleiro-do-mato, sapuva"}, {"familia": "FABACEAE", "cientifico": "Machaerium villosum", "sinonimo": "", "popular": "jacarandá-paulista"}, {"familia": "FABACEAE", "cientifico": "Peltophorum dubium", "sinonimo": "", "popular": "faveiro"}, {"familia": "FABACEAE", "cientifico": "Piptadenia gonoacantha", "sinonimo": "", "popular": "pau-jacaré"}, {"familia": "FABACEAE", "cientifico": "Platymiscium floribundum", "sinonimo": "", "popular": "sacambu"}, {"familia": "FABACEAE", "cientifico": "Schizolobium parahyba", "sinonimo": "", "popular": "guapuruvu"}, {"familia": "FABACEAE", "cientifico": "Senna macranthera", "sinonimo": "", "popular": "aleluia"}, {"familia": "FABACEAE", "cientifico": "Senna multijuga", "sinonimo": "", "popular": "pau-cigarra"}, {"familia": "FABACEAE", "cientifico": "Senna pendula", "sinonimo": "Cassia bicapsularis", "popular": "canudo-de-pito"}, {"familia": "FABACEAE", "cientifico": "Tachigali denudata", "sinonimo": "Sclerolobium denudatum", "popular": "passariúva"}, {"familia": "HUMIRIACEAE", "cientifico": "Vantanea compacta", "sinonimo": "", "popular": "guaraparim"}, {"familia": "LAMIACEAE", "cientifico": "Aegiphila integrifolia", "sinonimo": "Aegiphila sellowiana", "popular": "tamanqueiro"}, {"familia": "LAMIACEAE", "cientifico": "Vitex megapotamica", "sinonimo": "", "popular": "tarumã"}, {"familia": "LAMIACEAE", "cientifico": "Vitex polygama", "sinonimo": "", "popular": "tarumã"}, {"familia": "LAURACEAE", "cientifico": "Aiouea saligna", "sinonimo": "", "popular": "canela-anhoíba"}, {"familia": "LAURACEAE", "cientifico": "Cinnamomum stenophyllum", "sinonimo": "", "popular": "canela-vassoura"}, {"familia": "LAURACEAE", "cientifico": "Cryptocarya aschersoniana", "sinonimo": "", "popular": "canela-batalha"}, {"familia": "LAURACEAE", "cientifico": "Cryptocarya moschata", "sinonimo": "", "popular": "canela-batalha"}, {"familia": "LAURACEAE", "cientifico": "Endlicheria paniculata", "sinonimo": "", "popular": "canela-frade"}, {"familia": "LAURACEAE", "cientifico": "Nectandra barbellata", "sinonimo": "", "popular": "canela-parda"}, {"familia": "LAURACEAE", "cientifico": "Nectandra grandiflora", "sinonimo": "", "popular": "canela-sebo"}, {"familia": "LAURACEAE", "cientifico": "Nectandra megapotamica", "sinonimo": "", "popular": "canelinha"}, {"familia": "LAURACEAE", "cientifico": "Nectandra oppositifolia", "sinonimo": "Nectandra rigida", "popular": "canela-amarela, canela-ferrugem"}, {"familia": "LAURACEAE", "cientifico": "Nectandra puberula", "sinonimo": "", "popular": "canela-amarela"}, {"familia": "LAURACEAE", "cientifico": "Ocotea pulchella", "sinonimo": "", "popular": "canela-preta"}, {"familia": "LAURACEAE", "cientifico": "Persea willdenovii", "sinonimo": "Persea pyrifolia", "popular": "abacateiro-do-mato"}, {"familia": "LECYTHIDACEAE", "cientifico": "Cariniana estrellensis", "sinonimo": "", "popular": "jequitibá-branco"}, {"familia": "LECYTHIDACEAE", "cientifico": "Cariniana legalis", "sinonimo": "", "popular": "jequitibá-rosa"}, {"familia": "LYTHRACEAE", "cientifico": "Lafoensia vandelliana", "sinonimo": "Lafoensia replicata", "popular": "dedaleiro"}, {"familia": "MAGNOLIACEAE", "cientifico": "Magnolia ovata", "sinonimo": "Talauma ovata", "popular": "pinha-do-brejo"}, {"familia": "MALPIGHIACEAE", "cientifico": "Byrsonima ligustrifolia", "sinonimo": "", "popular": "murici"}, {"familia": "MALVACEAE", "cientifico": "Apeiba tibourbou", "sinonimo": "", "popular": "pau-jangada"}, {"familia": "MALVACEAE", "cientifico": "Ceiba speciosa", "sinonimo": "Chorisia speciosa", "popular": "paineira"}, {"familia": "MALVACEAE", "cientifico": "Guazuma ulmifolia", "sinonimo": "", "popular": "mutambo"}, {"familia": "MALVACEAE", "cientifico": "Heliocarpus popayanensis", "sinonimo": "Heliocarpus americanus", "popular": "jangada-brava"}, {"familia": "MALVACEAE", "cientifico": "Luehea divaricata", "sinonimo": "", "popular": "açoita-cavalo"}, {"familia": "MALVACEAE", "cientifico": "Luehea grandiflora", "sinonimo": "", "popular": "açoita-cavalo"}, {"familia": "MALVACEAE", "cientifico": "Pseudobombax grandiflorum", "sinonimo": "", "popular": "embiruçu"}, {"familia": "MALVACEAE", "cientifico": "Sterculia curiosa", "sinonimo": "", "popular": "chichá"}, {"familia": "MELASTOMATACEAE", "cientifico": "Huberia semisserrata", "sinonimo": "", "popular": "quaresmeira-branca-do-brejo"}, {"familia": "MELASTOMATACEAE", "cientifico": "Miconia cabucu", "sinonimo": "", "popular": "cabuçu"}, {"familia": "MELASTOMATACEAE", "cientifico": "Miconia cinnamomifolia", "sinonimo": "Miconia candolleana", "popular": "jacatirão"}, {"familia": "MELASTOMATACEAE", "cientifico": "Miconia cubatanensis", "sinonimo": "", "popular": "jacatirão"}, {"familia": "MELASTOMATACEAE", "cientifico": "Miconia ligustroides", "sinonimo": "", "popular": "jacatirão"}, {"familia": "MELASTOMATACEAE", "cientifico": "Miconia valtheri", "sinonimo": "", "popular": ""}, {"familia": "MELASTOMATACEAE", "cientifico": "Tibouchina mutabilis", "sinonimo": "", "popular": "manacá-da-serra"}, {"familia": "MELASTOMATACEAE", "cientifico": "Trembleya parviflora", "sinonimo": "", "popular": ""}, {"familia": "MELIACEAE", "cientifico": "Cabralea canjerana", "sinonimo": "", "popular": "canjerana"}, {"familia": "MELIACEAE", "cientifico": "Cedrela fissilis", "sinonimo": "", "popular": "cedro"}, {"familia": "MELIACEAE", "cientifico": "Guarea guidonia", "sinonimo": "", "popular": "marinheiro"}, {"familia": "MELIACEAE", "cientifico": "Guarea macrophylla", "sinonimo": "Guarea tuberculata", "popular": "marinheiro"}, {"familia": "MELIACEAE", "cientifico": "Trichilia silvatica", "sinonimo": "", "popular": "catiguá"}, {"familia": "MONIMIACEAE", "cientifico": "Mollinedia schottiana", "sinonimo": "", "popular": "guatambu-langanha"}, {"familia": "MORACEAE", "cientifico": "Ficus insipida", "sinonimo": "", "popular": "pigueira-do-brejo"}, {"familia": "MORACEAE", "cientifico": "Ficus luschnathiana", "sinonimo": "Ficus enormis", "popular": "figueira-da-pedra"}, {"familia": "MORACEAE", "cientifico": "Maclura tinctoria", "sinonimo": "", "popular": "tatajuba"}, {"familia": "MORACEAE", "cientifico": "Sorocea bonplandii", "sinonimo": "", "popular": "cega-olho"}, {"familia": "MYRSINACEAE", "cientifico": "Myrsine coriacea", "sinonimo": "Rapanea ferruginea", "popular": "capororoca"}, {"familia": "MYRSINACEAE", "cientifico": "Myrsine guianensis", "sinonimo": "Rapanea guianensis", "popular": "capororoca"}, {"familia": "MYRSINACEAE", "cientifico": "Myrsine umbellata", "sinonimo": "Rapanea umbellata", "popular": "capororoca"}, {"familia": "MYRTACEAE", "cientifico": "Blepharocalyx salicifolius", "sinonimo": "", "popular": "murta-brasileira"}, {"familia": "MYRTACEAE", "cientifico": "Campomanesia eugenioides", "sinonimo": "", "popular": "guaviroba-do-mato"}, {"familia": "MYRTACEAE", "cientifico": "Campomanesia guazumifolia", "sinonimo": "", "popular": "sete-capotes, araçá-do-mato"}, {"familia": "MYRTACEAE", "cientifico": "Campomanesia phaea", "sinonimo": "Paivaea langsdorffii", "popular": "cambuci"}, {"familia": "MYRTACEAE", "cientifico": "Campomanesia xanthocarpa", "sinonimo": "", "popular": "guabiroba"}, {"familia": "MYRTACEAE", "cientifico": "Eugenia brasiliensis", "sinonimo": "", "popular": "grumixama"}, {"familia": "MYRTACEAE", "cientifico": "Eugenia cerasiflora", "sinonimo": "", "popular": "guamirim"}, {"familia": "MYRTACEAE", "cientifico": "Myrcia splendens", "sinonimo": "Myrcia fallax; M. rostrata", "popular": "guamirim"}, {"familia": "MYRTACEAE", "cientifico": "Myrcia tijucensis", "sinonimo": "Gomidesia tijucensis", "popular": "guamirim-ferro"}, {"familia": "MYRTACEAE", "cientifico": "Myrcia tomentosa", "sinonimo": "", "popular": "goiaba-brava"}, {"familia": "MYRTACEAE", "cientifico": "Myrciaria floribunda", "sinonimo": "", "popular": "cambuí"}, {"familia": "MYRTACEAE", "cientifico": "Pimenta pseudocaryophyllus", "sinonimo": "", "popular": "louro-cravo"}, {"familia": "MYRTACEAE", "cientifico": "Plinia cauliflora", "sinonimo": "Myrciaria cauliflora", "popular": "jabuticabeira"}, {"familia": "MYRTACEAE", "cientifico": "Plinia edulis", "sinonimo": "Marlierea edulis", "popular": "cambucá"}, {"familia": "MYRTACEAE", "cientifico": "Psidium cattleianum", "sinonimo": "", "popular": "araçá"}, {"familia": "MYRTACEAE", "cientifico": "Psidium guajava", "sinonimo": "", "popular": "goiabeira"}, {"familia": "NYCTAGINACEAE", "cientifico": "Guapira opposita", "sinonimo": "", "popular": "maria-mole, flor-de-pérola"}, {"familia": "OCHNACEAE", "cientifico": "Ouratea parviflora", "sinonimo": "", "popular": "guatinga"}, {"familia": "OLACACEAE", "cientifico": "Heisteria silvianii", "sinonimo": "", "popular": "casco-de-tatu"}, {"familia": "OLEACEAE", "cientifico": "Chionanthus trichotomus", "sinonimo": "", "popular": "limoeiro-do-mato"}, {"familia": "PERACEAE", "cientifico": "Pera glabrata", "sinonimo": "Pera obovata", "popular": "tamanqueira"}, {"familia": "PHYLLANTHACEAE", "cientifico": "Savia dictyocarpa", "sinonimo": "Securinega guaraiuva", "popular": "guaraiúva"}, {"familia": "PHYTOLACCACEAE", "cientifico": "Phytolacca dioica", "sinonimo": "", "popular": "ceboleira"}, {"familia": "PHYTOLACCACEAE", "cientifico": "Seguieria langsdorffii", "sinonimo": "", "popular": "limoeiro-do-mato, agulheiro"}, {"familia": "PODOCARPACEAE", "cientifico": "Podocarpus sellowii", "sinonimo": "", "popular": "pinheiro-bravo"}, {"familia": "POLYGONACEAE", "cientifico": "Coccoloba warmingii", "sinonimo": "", "popular": "cocoloba"}, {"familia": "PROTEACEAE", "cientifico": "Euplassa cantareirae", "sinonimo": "", "popular": "cavalho-brasileiro"}, {"familia": "ROSACEAE", "cientifico": "Prunus myrtifolia", "sinonimo": "Prunus sellowii", "popular": "bravo"}, {"familia": "RUBIACEAE", "cientifico": "Amaioua intermedia", "sinonimo": "", "popular": "marmelada"}, {"familia": "RUBIACEAE", "cientifico": "Bathysa australis", "sinonimo": "", "popular": "caá-açu"}, {"familia": "RUBIACEAE", "cientifico": "Faramea tetragona", "sinonimo": "", "popular": "casco-de-vaca"}, {"familia": "RUBIACEAE", "cientifico": "Genipa americana", "sinonimo": "", "popular": "jenipapeiro"}, {"familia": "RUBIACEAE", "cientifico": "Hamelia patens", "sinonimo": "", "popular": "amélia"}, {"familia": "RUBIACEAE", "cientifico": "Posoqueria latifolia", "sinonimo": "", "popular": "laranja-de-macaco"}, {"familia": "RUBIACEAE", "cientifico": "Psychotria suterella", "sinonimo": "", "popular": "pixirica"}, {"familia": "RUBIACEAE", "cientifico": "Psychotria vellosiana", "sinonimo": "", "popular": "erva-de-rato"}, {"familia": "RUBIACEAE", "cientifico": "Randia armata", "sinonimo": "Randia spinosa", "popular": "laranja-de-macaco"}, {"familia": "RUBIACEAE", "cientifico": "Rudgea jasminoides", "sinonimo": "", "popular": "café-do-mato, jasmim-do-campo"}, {"familia": "RUTACEAE", "cientifico": "Balfourodendron riedelianum", "sinonimo": "", "popular": "pau-marfim"}, {"familia": "RUTACEAE", "cientifico": "Dictyoloma vandellianum", "sinonimo": "", "popular": "tingui"}, {"familia": "RUTACEAE", "cientifico": "Esenbeckia grandiflora", "sinonimo": "", "popular": "pau-de-cotia"}, {"familia": "RUTACEAE", "cientifico": "Esenbeckia leiocarpa", "sinonimo": "", "popular": "guarantã"}, {"familia": "RUTACEAE", "cientifico": "Metrodorea nigra", "sinonimo": "", "popular": "chupa-ferro"}, {"familia": "RUTACEAE", "cientifico": "Zanthoxylum rhoifolium", "sinonimo": "", "popular": "mamica-de-porca"}, {"familia": "SALICACEAE", "cientifico": "Casearia sylvestris", "sinonimo": "", "popular": "guaçatonga"}, {"familia": "SAPINDACEAE", "cientifico": "Allophylus edulis", "sinonimo": "", "popular": "chal-chal"}, {"familia": "SAPINDACEAE", "cientifico": "Cupania oblongifolia", "sinonimo": "", "popular": "camboatá"}, {"familia": "SAPINDACEAE", "cientifico": "Cupania vernalis", "sinonimo": "", "popular": "camboatá"}, {"familia": "SAPINDACEAE", "cientifico": "Dodonea viscosa", "sinonimo": "", "popular": "vassoura"}, {"familia": "SOLANACEAE", "cientifico": "Solanum swartzianum", "sinonimo": "", "popular": "pratinha"}, {"familia": "STYRACACEAE", "cientifico": "Styrax acuminatus", "sinonimo": "", "popular": "benjoim"}, {"familia": "THEACEAE", "cientifico": "Laplacea fruticosa", "sinonimo": "Gordonia fruticosa", "popular": ""}, {"familia": "THYMELAEACEAE", "cientifico": "Daphnopsis fasciculata", "sinonimo": "", "popular": "embira"}, {"familia": "URTICACEAE", "cientifico": "Cecropia glaziovii", "sinonimo": "", "popular": "embaúba-vermelha"}, {"familia": "URTICACEAE", "cientifico": "Cecropia hololeuca", "sinonimo": "", "popular": "embaúba-branca"}, {"familia": "URTICACEAE", "cientifico": "Cecropia pachystachya", "sinonimo": "", "popular": "embaúba-branca"}, {"familia": "VERBENACEAE", "cientifico": "Citharexylum myrianthum", "sinonimo": "", "popular": "pau-viola"}, {"familia": "VOCHYSIACEAE", "cientifico": "Vochysia magnifica", "sinonimo": "", "popular": "pau-de-tucano"}, {"familia": "VOCHYSIACEAE", "cientifico": "Vochysia tucanorum", "sinonimo": "", "popular": "pau-de-tucano"}, {"familia": "WINTERACEAE", "cientifico": "Drimys brasiliensis", "sinonimo": "", "popular": "casca-d'anta"}];
+const INVESTIMENTOS = [{"data": "12/11/2025", "valor": -51761.5, "referencia": "Potes/vasos", "meioPgto": "PIX Dioni", "fornecedor": "Nutriplan", "cnpj": "78.575.511/0001-29", "dc": 292, "valorCorrigido": -56673.66, "categoria": "Potes/Vasos 25L"}, {"data": "17/11/2025", "valor": -52125.0, "referencia": "Mudas", "meioPgto": "PIX Dioni", "fornecedor": "Dioni Maranhão", "cnpj": "13.489.269/0001-25", "dc": 287, "valorCorrigido": -56983.13, "categoria": "Mudas"}, {"data": "17/11/2025", "valor": -3500.0, "referencia": "Caminhão de Terra", "meioPgto": "PIX Dioni", "fornecedor": "Dioni Maranhão", "cnpj": "13.489.269/0001-25", "dc": 287, "valorCorrigido": -3826.21, "categoria": "Caminhão de Terra"}, {"data": "20/11/2025", "valor": -7000.0, "referencia": "Estacas 2m", "meioPgto": "PIX Dioni", "fornecedor": "Djalma e Fábio", "cnpj": "13.489.269/0001-25", "dc": 284, "valorCorrigido": -7645.29, "categoria": "Estacas 2m"}, {"data": "22/11/2025", "valor": -22875.0, "referencia": "Mudas", "meioPgto": "PIX Dioni", "fornecedor": "Dioni Maranhão", "cnpj": "13.489.269/0001-25", "dc": 282, "valorCorrigido": -24968.19, "categoria": "Mudas"}, {"data": "05/12/2025", "valor": -4000.0, "referencia": "Mão de obra quinzenal", "meioPgto": "PIX Dioni", "fornecedor": "Dioni Maranhão", "cnpj": "13.489.269/0001-25", "dc": 269, "valorCorrigido": -4348.44, "categoria": "Manutenção Quinzenal"}, {"data": "18/12/2025", "valor": -3800.0, "referencia": "Portão", "meioPgto": "PIX Dioni", "fornecedor": "Dioni Maranhão", "cnpj": "13.489.269/0001-25", "dc": 256, "valorCorrigido": -4114.37, "categoria": "Portão (Material + Mão de obra)"}, {"data": "18/12/2025", "valor": -10000.0, "referencia": "Mangueirinha Irrigação", "meioPgto": "PIX Dioni", "fornecedor": "Hortishoop", "cnpj": "13.489.269/0001-25", "dc": 256, "valorCorrigido": -10827.3, "categoria": "Sistema Irrigação"}, {"data": "18/12/2025", "valor": -1500.0, "referencia": "Arrendamento Mensal", "meioPgto": "PIX Dioni", "fornecedor": "Dioni Maranhão", "cnpj": "13.489.269/0001-25", "dc": 256, "valorCorrigido": -1624.09, "categoria": "Arrendamento Mensal 1"}, {"data": "18/12/2025", "valor": -4000.0, "referencia": "Mão de obra quinzenal", "meioPgto": "PIX Dioni", "fornecedor": "Dioni Maranhão", "cnpj": "13.489.269/0001-25", "dc": 256, "valorCorrigido": -4330.92, "categoria": "Manutenção Quinzenal"}, {"data": "23/12/2025", "valor": -1900.0, "referencia": "Material de Obra - Portão", "meioPgto": "PIX Dioni", "fornecedor": "Dioni Maranhão", "cnpj": "13.489.269/0001-25", "dc": 251, "valorCorrigido": -2054.0, "categoria": "Portão (Material + Mão de obra)"}, {"data": "03/01/2026", "valor": -4000.0, "referencia": "Funcionário Quinzenal", "meioPgto": "PIX", "fornecedor": "Dioni Maranhão", "cnpj": "13.489.269/0001-25", "dc": 240, "valorCorrigido": -4309.46, "categoria": "Manutenção Quinzenal"}, {"data": "09/01/2026", "valor": -2700.0, "referencia": "Mão de Obra - Portão", "meioPgto": "PIX", "fornecedor": "Dioni Maranhão", "cnpj": "13.489.269/0001-25", "dc": 234, "valorCorrigido": -2903.47, "categoria": "Portão (Material + Mão de obra)"}, {"data": "10/01/2026", "valor": -1500.0, "referencia": "Arrendamento Mensal", "meioPgto": "PIX", "fornecedor": "Dioni Maranhão", "cnpj": "13.489.269/0001-25", "dc": 233, "valorCorrigido": -1612.54, "categoria": "Arrendamento Mensal 1"}, {"data": "17/01/2026", "valor": -1700.0, "referencia": "Arrendamento Mensal", "meioPgto": "PIX", "fornecedor": "Dioni Maranhão", "cnpj": "13.489.269/0001-25", "dc": 226, "valorCorrigido": -1823.58, "categoria": "Arrendamento Mensal 2"}, {"data": "26/01/2026", "valor": -1800.0, "referencia": "Adubo Mensal", "meioPgto": "PIX", "fornecedor": "Dioni Maranhão", "cnpj": "13.489.269/0001-25", "dc": 217, "valorCorrigido": -1925.46, "categoria": "Adubo"}, {"data": "29/01/2026", "valor": -3650.0, "referencia": "Material de Obra - Banheiro", "meioPgto": "PIX", "fornecedor": "Dioni Maranhão", "cnpj": "13.489.269/0001-25", "dc": 214, "valorCorrigido": -3900.76, "categoria": "Banheiro (Material + Mão de Obra)"}, {"data": "30/01/2026", "valor": -22875.0, "referencia": "6100 Mudas", "meioPgto": "PIX", "fornecedor": "Dioni Maranhão", "cnpj": "13.489.269/0001-25", "dc": 213, "valorCorrigido": -24438.97, "categoria": "Mudas"}, {"data": "05/02/2026", "valor": -7257.02, "referencia": "Sistema de Irrigação 1/4", "meioPgto": "CC", "fornecedor": "Bruno", "cnpj": "", "dc": 207, "valorCorrigido": -7738.75, "categoria": "Sistema Irrigação"}, {"data": "05/02/2026", "valor": -3750.0, "referencia": "Estacas 2m 1/3", "meioPgto": "PIX Dioni", "fornecedor": "Djalma e Fábio", "cnpj": "13.489.269/0001-25", "dc": 207, "valorCorrigido": -3998.93, "categoria": "Estacas 2m"}, {"data": "07/02/2026", "valor": -1750.0, "referencia": "Caminhão de Terra", "meioPgto": "PIX", "fornecedor": "Dioni Maranhão", "cnpj": "13.489.269/0001-25", "dc": 205, "valorCorrigido": -1865.01, "categoria": "Caminhão de Terra"}, {"data": "07/02/2026", "valor": -4000.0, "referencia": "Funcionário Quinzenal", "meioPgto": "PIX", "fornecedor": "Dioni Maranhão", "cnpj": "13.489.269/0001-25", "dc": 205, "valorCorrigido": -4262.88, "categoria": "Manutenção Quinzenal"}, {"data": "07/02/2026", "valor": -26250.0, "referencia": "3500 Mudas", "meioPgto": "PIX Dioni", "fornecedor": "Dioni Maranhão", "cnpj": "13.489.269/0001-25", "dc": 205, "valorCorrigido": -27975.14, "categoria": "Mudas"}, {"data": "10/02/2026", "valor": -1500.0, "referencia": "Arrendamento Mensal", "meioPgto": "PIX Dioni", "fornecedor": "Dioni Maranhão", "cnpj": "13.489.269/0001-25", "dc": 202, "valorCorrigido": -1597.09, "categoria": "Arrendamento Mensal 1"}, {"data": "16/02/2026", "valor": -1700.0, "referencia": "Arrendamento Mensal", "meioPgto": "PIX Dioni", "fornecedor": "Dioni Maranhão", "cnpj": "13.489.269/0001-25", "dc": 196, "valorCorrigido": -1806.67, "categoria": "Arrendamento Mensal 2"}, {"data": "21/02/2026", "valor": -4000.0, "referencia": "Mão de obra quinzenal", "meioPgto": "PIX Dioni", "fornecedor": "Dioni Maranhão", "cnpj": "13.489.269/0001-25", "dc": 191, "valorCorrigido": -4244.39, "categoria": "Manutenção Quinzenal"}, {"data": "28/02/2026", "valor": -9471.49, "referencia": "Mudas + Maquina", "meioPgto": "PIX", "fornecedor": "Dioni Maranhão", "cnpj": "13.489.269/0001-25", "dc": 184, "valorCorrigido": -10028.35, "categoria": "Mudas"}, {"data": "28/02/2026", "valor": -13403.51, "referencia": "Mudas + Maquina", "meioPgto": "PIX Dioni", "fornecedor": "Dioni Maranhão", "cnpj": "13.489.269/0001-25", "dc": 184, "valorCorrigido": -14191.549615007087, "categoria": "Mudas"}, {"data": "28/02/2026", "valor": -750.0, "referencia": "Limpeza Terreno (Maquina)", "meioPgto": "PIX Dioni", "fornecedor": "Dioni Maranhão", "cnpj": "13.489.269/0001-25", "dc": 184, "valorCorrigido": -794.095144574467, "categoria": "Limpeza Terreno"}, {"data": "05/03/2026", "valor": -19194.34, "referencia": "Vasos 1/3", "meioPgto": "Boleto", "fornecedor": "Nutriplan", "cnpj": "", "dc": 179, "valorCorrigido": -20291.32, "categoria": "Potes/Vasos 25L"}, {"data": "05/03/2026", "valor": -7257.02, "referencia": "Irrigação 2/4", "meioPgto": "CC", "fornecedor": "Bruno", "cnpj": "", "dc": 179, "valorCorrigido": -7671.77, "categoria": "Sistema Irrigação"}, {"data": "07/03/2026", "valor": -6000.0, "referencia": "Funcionário Quinzenal", "meioPgto": "PIX", "fornecedor": "Dioni Maranhão", "cnpj": "13.489.269/0001-25", "dc": 177, "valorCorrigido": -6338.97, "categoria": "Manutenção Quinzenal"}, {"data": "15/03/2026", "valor": -1500.0, "referencia": "Arrendamento Mensal (dividido)", "meioPgto": "PIX", "fornecedor": "Dioni Maranhão", "cnpj": "13.489.269/0001-25", "dc": 169, "valorCorrigido": -1580.8107397412587, "categoria": "Arrendamento Mensal 1"}, {"data": "15/03/2026", "valor": -1700.0, "referencia": "Arrendamento Mensal (dividido)", "meioPgto": "PIX", "fornecedor": "Dioni Maranhão", "cnpj": "13.489.269/0001-25", "dc": 169, "valorCorrigido": -1791.5855050400933, "categoria": "Arrendamento Mensal 2"}, {"data": "28/03/2026", "valor": -6000.0, "referencia": "Funcionário Quinzenal", "meioPgto": "PIX", "fornecedor": "Dioni Maranhão", "cnpj": "13.489.269/0001-25", "dc": 156, "valorCorrigido": -6297.77, "categoria": "Manutenção Quinzenal"}, {"data": "30/03/2026", "valor": -1800.0, "referencia": "Adubo Mensal", "meioPgto": "PIX", "fornecedor": "Dioni Maranhão", "cnpj": "13.489.269/0001-25", "dc": 154, "valorCorrigido": -1888.16, "categoria": "Adubo"}, {"data": "03/04/2026", "valor": -1500.0, "referencia": "1/2 mao de obra pedreiro", "meioPgto": "PIX", "fornecedor": "Dioni Maranhão", "cnpj": "13.489.269/0001-25", "dc": 150, "valorCorrigido": -1571.51, "categoria": "Banheiro (Material + Mão de Obra)"}, {"data": "05/04/2026", "valor": -6000.0, "referencia": "Funcionário Quinzenal", "meioPgto": "PIX", "fornecedor": "Dioni Maranhão", "cnpj": "13.489.269/0001-25", "dc": 148, "valorCorrigido": -6282.15, "categoria": "Manutenção Quinzenal"}, {"data": "06/04/2026", "valor": -19194.34, "referencia": "Vasos 2/3", "meioPgto": "Boleto", "fornecedor": "Nutriplan", "cnpj": "13.489.269/0001-25", "dc": 147, "valorCorrigido": -20090.71, "categoria": "Potes/Vasos 25L"}, {"data": "06/04/2026", "valor": -7257.02, "referencia": "Irrigação 3/4", "meioPgto": "CC", "fornecedor": "Bruno", "cnpj": "13.489.269/0001-25", "dc": 147, "valorCorrigido": -7595.92, "categoria": "Sistema Irrigação"}, {"data": "10/04/2026", "valor": -1700.0, "referencia": "Arrendamento Mensal", "meioPgto": "PIX", "fornecedor": "FABIO ROGÉRIO GIACON", "cnpj": "PIX 267.960.018-50", "dc": 143, "valorCorrigido": -1777.18, "categoria": "Arrendamento Mensal 1"}, {"data": "15/04/2026", "valor": -1700.0, "referencia": "Arrendamento Mensal", "meioPgto": "PIX", "fornecedor": "SÃO JOSÉ ELETRICA E SERVIÇOS LTDA", "cnpj": "PIX (19)99145-4508", "dc": 138, "valorCorrigido": -1774.42, "categoria": "Arrendamento Mensal 2"}, {"data": "18/04/2026", "valor": -2000.0, "referencia": "Funcionário Quinzenal", "meioPgto": "PIX", "fornecedor": "LARYSSA MONIQUE DE LIMA", "cnpj": "PIX (14)99717-3991", "dc": 135, "valorCorrigido": -2085.61, "categoria": "Manutenção Quinzenal"}, {"data": "18/04/2026", "valor": -2000.0, "referencia": "Funcionário Quinzenal", "meioPgto": "PIX", "fornecedor": "VINICIUS MARANHO BRAGA", "cnpj": "PIX (19)99103-2922", "dc": 135, "valorCorrigido": -2085.61, "categoria": "Manutenção Quinzenal"}, {"data": "18/04/2026", "valor": -1500.0, "referencia": "Funcionário Quinzenal", "meioPgto": "PIX", "fornecedor": "RICARDO APARECIDO DE ARRUDA", "cnpj": "PiX 344.755.498-33", "dc": 135, "valorCorrigido": -1564.21, "categoria": "Manutenção Quinzenal"}, {"data": "20/04/2026", "valor": -1050.0, "referencia": "Caminhão Terra", "meioPgto": "PIX", "fornecedor": "XX", "cnpj": "270.739.948-51", "dc": 133, "valorCorrigido": -1094.27, "categoria": "Caminhão de Terra"}, {"data": "23/04/2026", "valor": -3750.0, "referencia": "Estacas 2m 50%", "meioPgto": "PIX", "fornecedor": "FABIO DE SOUZA VIEIRA", "cnpj": "*.054.309-", "dc": 130, "valorCorrigido": -3904.46, "categoria": "Estacas 2m"}, {"data": "02/05/2026", "valor": -2000.0, "referencia": "Funcionário Quinzenal", "meioPgto": "PIX", "fornecedor": "LARYSSA MONIQUE DE LIMA", "cnpj": "PIX (14)99717-3991", "dc": 121, "valorCorrigido": -2076.57, "categoria": "Manutenção Quinzenal"}, {"data": "02/05/2026", "valor": -2000.0, "referencia": "Funcionário Quinzenal", "meioPgto": "PIX", "fornecedor": "VINICIUS MARANHO BRAGA", "cnpj": "PIX (19)99103-2922", "dc": 121, "valorCorrigido": -2076.57, "categoria": "Manutenção Quinzenal"}, {"data": "02/05/2026", "valor": -1500.0, "referencia": "Funcionário Quinzenal", "meioPgto": "PIX", "fornecedor": "TEREZINHA DE OLIVEIRA ARRUDA", "cnpj": "PIX 6729663871", "dc": 121, "valorCorrigido": -1557.43, "categoria": "Manutenção Quinzenal"}, {"data": "05/05/2026", "valor": -19194.34, "referencia": "Vasos 2/3", "meioPgto": "Boleto", "fornecedor": "Nutriplan", "cnpj": "", "dc": 118, "valorCorrigido": -19910.62, "categoria": "Potes/Vasos 25L"}, {"data": "05/05/2026", "valor": -7257.02, "referencia": "Irrigação 3/4", "meioPgto": "CC", "fornecedor": "Bruno", "cnpj": "", "dc": 118, "valorCorrigido": -7527.83, "categoria": "Sistema Irrigação"}, {"data": "10/05/2026", "valor": -1700.0, "referencia": "Arrendamento Mensal", "meioPgto": "PIX", "fornecedor": "FABIO ROGÉRIO GIACON", "cnpj": "PIX 267.960.018-50", "dc": 113, "valorCorrigido": -1760.7, "categoria": "Arrendamento Mensal 1"}, {"data": "15/05/2026", "valor": -1700.0, "referencia": "Arrendamento Mensal", "meioPgto": "PIX", "fornecedor": "SÃO JOSÉ ELETRICA E SERVIÇOS LTDA", "cnpj": "PIX (19)99145-4508", "dc": 108, "valorCorrigido": -1757.97, "categoria": "Arrendamento Mensal 2"}, {"data": "16/05/2026", "valor": -2000.0, "referencia": "Funcionário Quinzenal", "meioPgto": "PIX", "fornecedor": "LARYSSA MONIQUE DE LIMA", "cnpj": "PIX (14)99717-3991", "dc": 107, "valorCorrigido": -2067.56, "categoria": "Manutenção Quinzenal"}, {"data": "16/05/2026", "valor": -2000.0, "referencia": "Funcionário Quinzenal", "meioPgto": "PIX", "fornecedor": "VINICIUS MARANHO BRAGA", "cnpj": "PIX (19)99103-2922", "dc": 107, "valorCorrigido": -2067.56, "categoria": "Manutenção Quinzenal"}, {"data": "16/05/2026", "valor": -1500.0, "referencia": "Funcionário Quinzenal", "meioPgto": "PIX", "fornecedor": "TEREZINHA DE OLIVEIRA ARRUDA", "cnpj": "PIX 6729663871", "dc": 107, "valorCorrigido": -1550.67, "categoria": "Manutenção Quinzenal"}, {"data": "30/05/2026", "valor": -2000.0, "referencia": "Funcionário Quinzenal", "meioPgto": "", "fornecedor": "", "cnpj": "", "dc": 93, "valorCorrigido": -2058.59, "categoria": "Manutenção Quinzenal"}, {"data": "30/05/2026", "valor": -2000.0, "referencia": "Funcionário Quinzenal", "meioPgto": "", "fornecedor": "", "cnpj": "", "dc": 93, "valorCorrigido": -2058.59, "categoria": "Manutenção Quinzenal"}, {"data": "30/05/2026", "valor": -1500.0, "referencia": "Funcionário Quinzenal", "meioPgto": "", "fornecedor": "", "cnpj": "", "dc": 93, "valorCorrigido": -1543.94, "categoria": "Manutenção Quinzenal"}, {"data": "01/06/2026", "valor": -700.0, "referencia": "2 caminhoes terra", "meioPgto": "PIX", "fornecedor": "ALESSANDRO GIACON", "cnpj": "PIX 270.739.948-51", "dc": 91, "valorCorrigido": -720.06, "categoria": "Caminhão de Terra"}, {"data": "10/06/2026", "valor": -1700.0, "referencia": "Arrendamento Mensal 1", "meioPgto": "PIX", "fornecedor": "FABIO ROGÉRIO GIACON", "cnpj": "PIX 267.960.018-50", "dc": 82, "valorCorrigido": -1743.84, "categoria": "Arrendamento Mensal 1"}, {"data": "13/06/2026", "valor": -2000.0, "referencia": "Funcionário Quinzenal", "meioPgto": "PIX", "fornecedor": "LARYSSA MONIQUE DE LIMA", "cnpj": "PIX (14)99717-3991", "dc": 79, "valorCorrigido": -2049.66, "categoria": "Manutenção Quinzenal"}, {"data": "13/06/2026", "valor": -2000.0, "referencia": "Funcionário Quinzenal", "meioPgto": "PIX", "fornecedor": "VINICIUS MARANHO BRAGA", "cnpj": "PIX (19)99103-2922", "dc": 79, "valorCorrigido": -2049.66, "categoria": "Manutenção Quinzenal"}, {"data": "13/06/2026", "valor": -1500.0, "referencia": "Funcionário Quinzenal", "meioPgto": "PIX", "fornecedor": "Dioni Maranhão", "cnpj": "13.489.269/0001-25", "dc": 79, "valorCorrigido": -1537.25, "categoria": "Manutenção Quinzenal"}, {"data": "15/06/2026", "valor": -1700.0, "referencia": "Arrendamento Mensal 2", "meioPgto": "PIX", "fornecedor": "SÃO JOSÉ ELETRICA E SERVIÇOS LTDA", "cnpj": "PIX (19)99145-4508", "dc": 77, "valorCorrigido": -1741.13, "categoria": "Arrendamento Mensal 2"}, {"data": "20/06/2026", "valor": -1700.0, "referencia": "Adubação", "meioPgto": "PIX", "fornecedor": "Dioni Maranhão", "cnpj": "13.489.269/0001-25", "dc": 72, "valorCorrigido": -1738.43, "categoria": "Adubo"}, {"data": "16/06/2026", "valor": -1089.23, "referencia": "Energia", "meioPgto": "PIX", "fornecedor": "Dioni Maranhão", "cnpj": "13.489.269/0001-25", "dc": 76, "valorCorrigido": -1115.24, "categoria": "Energia"}, {"data": "27/06/2026", "valor": -2000.0, "referencia": "Funcionário Quinzenal", "meioPgto": "PIX", "fornecedor": "LARYSSA MONIQUE DE LIMA", "cnpj": "PIX (14)99717-3991", "dc": 65, "valorCorrigido": -2040.77, "categoria": "Manutenção Quinzenal"}, {"data": "27/06/2026", "valor": -2000.0, "referencia": "Funcionário Quinzenal", "meioPgto": "PIX", "fornecedor": "VINICIUS MARANHO BRAGA", "cnpj": "PIX (19)99103-2922", "dc": 65, "valorCorrigido": -2040.77, "categoria": "Manutenção Quinzenal"}, {"data": "27/06/2026", "valor": -1500.0, "referencia": "Funcionário Quinzenal", "meioPgto": "PIX", "fornecedor": "TEREZINHA DE OLIVEIRA ARRUDA", "cnpj": "PIX 6729663871", "dc": 65, "valorCorrigido": -1530.58, "categoria": "Manutenção Quinzenal"}, {"data": "11/07/2026", "valor": -1700.0, "referencia": "Arrendamento Mensal 1", "meioPgto": "PIX", "fornecedor": "FABIO ROGÉRIO GIACON", "cnpj": "", "dc": 51, "valorCorrigido": -1727.13, "categoria": "Arrendamento Mensal 1"}, {"data": "11/07/2026", "valor": -2000.0, "referencia": "Funcionário Quinzenal", "meioPgto": "PIX", "fornecedor": "LARYSSA MONIQUE DE LIMA", "cnpj": "", "dc": 51, "valorCorrigido": -2031.92, "categoria": "Manutenção Quinzenal"}, {"data": "11/07/2026", "valor": -2000.0, "referencia": "Funcionário Quinzenal", "meioPgto": "PIX", "fornecedor": "VINICIUS MARANHO BRAGA", "cnpj": "", "dc": 51, "valorCorrigido": -2031.92, "categoria": "Manutenção Quinzenal"}, {"data": "11/07/2026", "valor": -1500.0, "referencia": "Funcionário Quinzenal", "meioPgto": "PIX", "fornecedor": "Dioni Maranhão", "cnpj": "", "dc": 51, "valorCorrigido": -1523.94, "categoria": "Manutenção Quinzenal"}, {"data": "16/07/2026", "valor": -1700.0, "referencia": "Arrendamento Mensal 2", "meioPgto": "PIX", "fornecedor": "SÃO JOSÉ ELETRICA E SERVIÇOS LTDA", "cnpj": "", "dc": 46, "valorCorrigido": -1724.45, "categoria": "Arrendamento Mensal 2"}, {"data": "16/07/2026", "valor": -465.1, "referencia": "Energia", "meioPgto": "Boleto", "fornecedor": "Enel", "cnpj": "", "dc": 46, "valorCorrigido": -471.79, "categoria": "Energia"}, {"data": "25/07/2026", "valor": -2000.0, "referencia": "Funcionário Quinzenal", "meioPgto": "PIX", "fornecedor": "LARYSSA MONIQUE DE LIMA", "cnpj": "", "dc": 37, "valorCorrigido": -2023.11, "categoria": "Manutenção Quinzenal"}, {"data": "25/07/2026", "valor": -2000.0, "referencia": "Funcionário Quinzenal", "meioPgto": "PIX", "fornecedor": "VINICIUS MARANHO BRAGA", "cnpj": "", "dc": 37, "valorCorrigido": -2023.11, "categoria": "Manutenção Quinzenal"}, {"data": "25/07/2026", "valor": -1500.0, "referencia": "Funcionário Quinzenal", "meioPgto": "PIX", "fornecedor": "Dioni Maranhão", "cnpj": "", "dc": 37, "valorCorrigido": -1517.33, "categoria": "Manutenção Quinzenal"}, {"data": "08/08/2026", "valor": -2000.0, "referencia": "Funcionário Quinzenal", "meioPgto": "PIX", "fornecedor": "LARYSSA MONIQUE DE LIMA", "cnpj": "", "dc": 23, "valorCorrigido": -2014.33, "categoria": "Manutenção Quinzenal"}, {"data": "08/08/2026", "valor": -2000.0, "referencia": "Funcionário Quinzenal", "meioPgto": "PIX", "fornecedor": "VINICIUS MARANHO BRAGA", "cnpj": "", "dc": 23, "valorCorrigido": -2014.33, "categoria": "Manutenção Quinzenal"}, {"data": "08/08/2026", "valor": -1500.0, "referencia": "Funcionário Quinzenal", "meioPgto": "PIX", "fornecedor": "Dioni Maranhão", "cnpj": "", "dc": 23, "valorCorrigido": -1510.75, "categoria": "Manutenção Quinzenal"}, {"data": "11/08/2026", "valor": -1700.0, "referencia": "Arrendamento Mensal 1", "meioPgto": "PIX", "fornecedor": "FABIO ROGÉRIO GIACON", "cnpj": "", "dc": 20, "valorCorrigido": -1710.59, "categoria": "Arrendamento Mensal 1"}, {"data": "17/08/2026", "valor": -1700.0, "referencia": "Arrendamento Mensal 2", "meioPgto": "PIX", "fornecedor": "SÃO JOSÉ ELETRICA E SERVIÇOS LTDA", "cnpj": "", "dc": 14, "valorCorrigido": -1707.41, "categoria": "Arrendamento Mensal 2"}, {"data": "15/08/2026", "valor": -1700.0, "referencia": "Adubação", "meioPgto": "PIX", "fornecedor": "Dioni Maranhão", "cnpj": "", "dc": 16, "valorCorrigido": -1708.47, "categoria": "Adubo"}, {"data": "22/08/2026", "valor": -2000.0, "referencia": "Funcionário Quinzenal", "meioPgto": "PIX", "fornecedor": "LARYSSA MONIQUE DE LIMA", "cnpj": "", "dc": 9, "valorCorrigido": -2005.6, "categoria": "Manutenção Quinzenal"}, {"data": "22/08/2026", "valor": -2000.0, "referencia": "Funcionário Quinzenal", "meioPgto": "PIX", "fornecedor": "VINICIUS MARANHO BRAGA", "cnpj": "", "dc": 9, "valorCorrigido": -2005.6, "categoria": "Manutenção Quinzenal"}, {"data": "22/08/2026", "valor": -1500.0, "referencia": "Funcionário Quinzenal", "meioPgto": "PIX", "fornecedor": "Dioni Maranhão", "cnpj": "", "dc": 9, "valorCorrigido": -1504.2, "categoria": "Manutenção Quinzenal"}, {"data": "22/08/2026", "valor": -527.25, "referencia": "Energua", "meioPgto": "PIX", "fornecedor": "Dioni Maranhão", "cnpj": "", "dc": 9, "valorCorrigido": -528.73, "categoria": "Energia"}];
+
+let movimentacoes = [];
+let currentTab = 'estoque';
+const sortState = {
+  estoque: {key:'especie', dir:1},
+  mov: {key:'data', dir:-1},
+  esp: {key:'especie', dir:1},
+  interesse: {key:'comum', dir:1},
+  nativas: {key:'familia', dir:1},
+  inv: {key:'data', dir:-1},
+};
+
+function normalizeNome(s){
+  return s.toString().trim().toLowerCase()
+    .normalize('NFKD').replace(/[̀-ͯ]/g,'')
+    .replace(/[^a-z0-9]+/g,'');
+}
+
+function buscaNorm(s){
+  return s.toString().trim().toLowerCase()
+    .normalize('NFKD').replace(/[̀-ͯ]/g,'');
+}
+
+function computeInteresseStatus(){
+  const especiesQtde = new Map(); // norm -> total qtde em estoque
+  computeSpecies().forEach(e=>{
+    especiesQtde.set(normalizeNome(e.especie), e.qtde);
+  });
+  return INTERESSE.map(item=>{
+    const norm = item.norm;
+    const tem = especiesQtde.has(norm);
+    const qtde = tem ? especiesQtde.get(norm) : 0;
+    return {comum: item.comum, cientifico: item.cientifico, tem, qtde};
+  });
+}
+
+function applySort(list, tableId, defaultCmp){
+  const st = sortState[tableId];
+  if(!st) return list;
+  list.sort((a,b)=>{
+    let va = a[st.key], vb = b[st.key];
+    if((tableId==='mov' || tableId==='inv') && st.key==='data'){
+      va = parseData(a.data); vb = parseData(b.data);
+    }
+    if(typeof va === 'string' && typeof vb === 'string'){
+      return va.localeCompare(vb,'pt-BR') * st.dir;
+    }
+    return ((va>vb)-(va<vb)) * st.dir;
+  });
+  return list;
+}
+
+function updateSortHeaders(){
+  document.querySelectorAll('th.sortable').forEach(th=>{
+    const tableId = th.dataset.table;
+    const key = th.dataset.key;
+    const st = sortState[tableId];
+    const arrow = th.querySelector('.sort-arrow');
+    if(st && st.key === key){
+      th.classList.add('sort-active');
+      arrow.textContent = st.dir === 1 ? '▲' : '▼';
+    } else {
+      th.classList.remove('sort-active');
+      arrow.textContent = '';
+    }
+  });
+}
+
+document.querySelectorAll('th.sortable').forEach(th=>{
+  th.addEventListener('click', ()=>{
+    const tableId = th.dataset.table;
+    const key = th.dataset.key;
+    const st = sortState[tableId];
+    if(st.key === key){
+      st.dir *= -1;
+    } else {
+      st.key = key;
+      st.dir = 1;
+    }
+    if(tableId==='estoque') renderEstoque();
+    if(tableId==='mov') renderMovimentacoes();
+    if(tableId==='esp') renderEspecies();
+    if(tableId==='interesse') renderInteresse();
+    if(tableId==='nativas') renderNativas();
+    if(tableId==='inv') renderInvLancamentos();
+  });
+});
+
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+function fecharModal(){
+  document.getElementById('modalOverlay').style.display = 'none';
+}
+
+function abrirDetalheComprador(comprador){
+  const vendas = movimentacoes.filter(m=>
+    m.evento==='Saída' && m.comprador===comprador
+  ).sort((a,b)=> parseData(b.data) - parseData(a.data));
+
+  document.getElementById('modalTitulo').textContent = `Relatório do Comprador — ${comprador}`;
+
+  if(vendas.length===0){
+    document.getElementById('modalConteudo').innerHTML = '<p style="color:var(--ink-faint);">Nenhuma venda encontrada.</p>';
+  } else {
+    const hojeRel = new Date();
+    const totalBruto = vendas.reduce((s,v)=> s + (v.precoUnitario ? Math.abs(v.qtde)*v.precoUnitario : 0), 0);
+    const totalMudas = vendas.reduce((s,v)=> s + Math.abs(v.qtde), 0);
+    const totalPagoGeral = Math.min(totalPagoComprador(comprador, hojeRel), totalBruto);
+    const totalAReceberGeral = Math.max(totalBruto - totalPagoGeral, 0);
+
+    document.getElementById('modalConteudo').innerHTML = `
+      <button class="btn secondary no-print" onclick="exportarPDF('Relatório do Comprador — ${comprador.replace(/'/g,"\\'")}')" style="margin-bottom:14px;">Exportar PDF</button>
+      <div class="summary" style="margin:0 0 18px;">
+        <div class="summary-row">
+          <div class="metric">
+            <div class="metric-label">Total de mudas</div>
+            <div class="metric-value" style="font-size:18px;">${fmtNum(totalMudas)}</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Total vendido</div>
+            <div class="metric-value" style="font-size:18px;">${fmtMoney(totalBruto)}</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Total pago</div>
+            <div class="metric-value" style="font-size:18px;color:var(--success);">${fmtMoney(totalPagoGeral)}</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Saldo a receber</div>
+            <div class="metric-value" style="font-size:18px;color:var(--danger);">${fmtMoney(totalAReceberGeral)}</div>
+          </div>
+        </div>
+      </div>
+      <div class="section-title" style="font-size:14px;">Histórico de vendas</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Muda</th>
+              <th class="num">Preço unitário</th>
+              <th class="num">Quantidade</th>
+              <th class="num">Valor bruto</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${vendas.map(v=>`
+              <tr>
+                <td>${v.data}</td>
+                <td>${v.especie}</td>
+                <td class="num">${v.precoUnitario ? fmtMoney(v.precoUnitario) : '—'}</td>
+                <td class="num">${fmtNum(Math.abs(v.qtde))}</td>
+                <td class="num">${v.precoUnitario ? fmtMoney(Math.abs(v.qtde)*v.precoUnitario) : '—'}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+          <tfoot>
+            <tr style="font-weight:600;background:var(--moss);">
+              <td colspan="3">Total</td>
+              <td class="num">${fmtNum(totalMudas)}</td>
+              <td class="num">${fmtMoney(totalBruto)}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      ${(() => {
+        const pagamentosComprador = pagamentos.filter(p=>p.comprador===comprador).sort((a,b)=>parseData(b.data)-parseData(a.data));
+        if(pagamentosComprador.length===0) return '';
+        const totalPago = pagamentosComprador.reduce((s,p)=>s+p.valor,0);
+        return `
+          <div class="section-title" style="font-size:14px;margin-top:18px;">Histórico de pagamentos</div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Meio</th>
+                  <th class="num">Valor</th>
+                  <th>Comprovante</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${pagamentosComprador.map(p=>{
+                  const c = p.comprovante;
+                  let meioTexto = p.meio || '—';
+                  if(p.destinoPix) meioTexto += ` <span style="color:var(--ink-faint);font-size:11.5px;">(chave ${p.destinoPix})</span>`;
+                  if(p.origem) meioTexto += `<br><span style="color:var(--ink-faint);font-size:11.5px;">Pago por ${p.origem}</span>`;
+                  if(p.detalhe) meioTexto += `<br><span style="color:var(--ink-faint);font-size:11.5px;">${p.detalhe}</span>`;
+                  const tooltip = c ? `Pago por ${c.origem} às ${c.horario}${c.transacaoMercadoPago ? ' — Transação Mercado Pago: '+c.transacaoMercadoPago : ''} — ID Pix: ${c.idPix}` : '';
+                  const comprovanteTexto = c ? `✓ Anexado<br><span style="color:var(--ink-faint);font-size:11px;">${tooltip}</span>` : '—';
+                  return `
+                  <tr>
+                    <td>${p.data}</td>
+                    <td>${meioTexto}</td>
+                    <td class="num">${fmtMoney(p.valor)}</td>
+                    <td>${comprovanteTexto}</td>
+                  </tr>
+                `;}).join('')}
+              </tbody>
+              <tfoot>
+                <tr style="font-weight:600;background:var(--moss);">
+                  <td colspan="2">Total pago</td>
+                  <td class="num">${fmtMoney(totalPago)}</td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        `;
+      })()}
+      <div class="hint">Saldo a receber = total vendido − total pago, considerando todos os pagamentos registrados até hoje.</div>
+    `;
+  }
+  document.getElementById('modalOverlay').style.display = 'flex';
+}
+
+function abrirDetalheSaidas(especie, sitio){
+  const vendas = movimentacoes.filter(m=>
+    m.evento==='Saída' && m.especie===especie && m.sitio===sitio
+  ).sort((a,b)=> parseData(b.data) - parseData(a.data));
+
+  document.getElementById('modalTitulo').textContent = `Saídas — ${especie} (${sitio==='Área de acesso'?sitio:'Sítio '+sitio})`;
+
+  if(vendas.length===0){
+    document.getElementById('modalConteudo').innerHTML = '<p style="color:var(--ink-faint);">Nenhuma saída encontrada.</p>';
+  } else {
+    document.getElementById('modalConteudo').innerHTML = `
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Lote</th>
+              <th>Comprador</th>
+              <th class="num">Qtde</th>
+              <th class="num">Valor</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${vendas.map(v=>{
+              const hojeModal = new Date();
+              let statusHtml = '—';
+              if(v.comprador){
+                const devido = totalVendidoComprador(v.comprador, hojeModal);
+                const pago = totalPagoComprador(v.comprador, hojeModal);
+                if(pago <= 0) statusHtml = '<span class="badge saida">A receber</span>';
+                else if(pago >= devido) statusHtml = '<span class="badge entrada">Pago</span>';
+                else statusHtml = '<span class="badge" style="background:var(--clay-light);color:var(--clay-dark);">Parcial</span>';
+              }
+              return `
+              <tr>
+                <td>${v.data}</td>
+                <td>${v.lote}</td>
+                <td>${v.comprador || '—'}</td>
+                <td class="num">${fmtNum(Math.abs(v.qtde))}</td>
+                <td class="num">${v.precoUnitario ? fmtMoney(Math.abs(v.qtde)*v.precoUnitario) : '—'}</td>
+                <td>${statusHtml}</td>
+              </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+      <div class="hint">Veja o detalhe completo dessa venda na aba Vendas.</div>
+    `;
+  }
+  document.getElementById('modalOverlay').style.display = 'flex';
+}
+
+function exportarPDF(tituloAba){
+  const dataHoje = new Date().toLocaleDateString('pt-BR');
+  document.getElementById('printHeader').textContent = `${document.title} — ${tituloAba} — ${dataHoje}`;
+
+  const tituloOriginal = document.title;
+  const dataArquivo = new Date().toISOString().slice(0,10);
+  const nomeArquivo = `${tituloOriginal} - ${tituloAba.replace(/—/g,'-')} - ${dataArquivo}`;
+  document.title = nomeArquivo;
+
+  window.print();
+
+  setTimeout(()=>{ document.title = tituloOriginal; }, 1000);
+}
+
+function parseData(str){
+  // dd/mm/aaaa -> Date, for sorting
+  const [d,m,y] = str.split('/').map(Number);
+  return new Date(y, m-1, d);
+}
+
+function fmtNum(n){
+  return new Intl.NumberFormat('pt-BR').format(n);
+}
+
+function fmtMoney(n){
+  return new Intl.NumberFormat('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2}).format(n);
+}
+
+function fmtMoneyAnual(n){
+  return new Intl.NumberFormat('pt-BR', {maximumFractionDigits:0}).format(n);
+}
+
+function fmtMoneyInput(n){
+  return new Intl.NumberFormat('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2}).format(n||0);
+}
+
+function parseMoneyInput(str){
+  const limpo = str.toString().replace(/[^\d,-]/g,'').replace(/\.(?=.*\.)/g,'');
+  const normalizado = limpo.replace(',', '.');
+  const v = parseFloat(normalizado);
+  return isNaN(v) ? 0 : v;
+}
+
+function fmtIntInput(n){
+  return new Intl.NumberFormat('pt-BR', {maximumFractionDigits:0}).format(n||0);
+}
+
+function parseIntInput(str){
+  const limpo = str.toString().replace(/[^\d-]/g,'');
+  const v = parseInt(limpo, 10);
+  return isNaN(v) ? 0 : v;
+}
+
+// ---------- INVESTIMENTOS ----------
+const MESES_PT = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+
+function mesRef(dataObj){
+  // "mmm/aa" ex: nov/25
+  const mm = MESES_PT[dataObj.getMonth()];
+  const aa = String(dataObj.getFullYear()).slice(-2);
+  return `${mm}/${aa}`;
+}
+
+function fimDoMes(dataObj){
+  return new Date(dataObj.getFullYear(), dataObj.getMonth()+1, 0);
+}
+
+// meses até jul/26 (inclusive) ficam travados (somente leitura) nos campos editáveis das
+// sub-abas Custo Unitário, Estoque de Mudas e Evolução Conta Capital; a partir de ago/26
+// os campos continuam editáveis normalmente.
+const CORTE_EDICAO_FIM = fimDoMes(new Date(2026, 7, 1)); // fim de agosto/26
+
+function mesEhEditavel(fimMes){
+  return fimMes > CORTE_EDICAO_FIM;
+}
+
+function corrigirValor(valor, dataTransacao, dataReferencia){
+  const dias = (dataReferencia - dataTransacao) / (1000*60*60*24);
+  if(dias <= 0) return valor;
+  return valor * Math.pow(1.12, dias/365);
+}
+
+function investimentosComData(){
+  return INVESTIMENTOS.map(r=>({...r, dataObj: parseData(r.data)}));
+}
+
+// data do último lançamento da planilha original — a partir daqui, novos lançamentos
+// passam a usar o cálculo em cadeia (saldo líquido do mês anterior + juros + novos gastos)
+const ULTIMA_DATA_HISTORICA = investimentosComData().reduce((max,r)=> r.dataObj>max ? r.dataObj : max, new Date(0));
+const ULTIMO_MES_HISTORICO_FIM = fimDoMes(ULTIMA_DATA_HISTORICA);
+
+const INVESTIMENTOS_EXTRAS_KEY = 'investimentosExtras';
+let investimentosExtras = [];
+
+async function loadInvestimentosExtras(){
+  const value = await storageGet(INVESTIMENTOS_EXTRAS_KEY);
+  if(value){
+    try{ investimentosExtras = JSON.parse(value); }catch(e){ investimentosExtras = []; }
+  }
+  // gastos da 1ª quinzena de setembro/26, pagos via acerto de contas da Boa Esperança (por Dioni)
+  const notaAcerto = 'Pago via acerto de contas — Boa Esperança (por Dioni); conta para a Conta Capital do Viveiro';
+  const seeds = [
+    {data:'05/09/2026', valor:-2000, categoria:'Manutenção Quinzenal', referencia:'Funcionário Quinzenal', fornecedor:'VINICIUS MARANHO BRAGA', meioPgto:'Acerto de contas', cnpj:'', dc:null, nota:notaAcerto, origem:'Caixa Viveiro - investimento'},
+    {data:'05/09/2026', valor:-2000, categoria:'Manutenção Quinzenal', referencia:'Funcionário Quinzenal', fornecedor:'LARYSSA MONIQUE DE LIMA', meioPgto:'Acerto de contas', cnpj:'', dc:null, nota:notaAcerto, origem:'Caixa Viveiro - investimento'},
+    {data:'05/09/2026', valor:-1500, categoria:'Segurança', referencia:'Guarda Noturno', fornecedor:'Guarda Noturno', meioPgto:'Acerto de contas', cnpj:'', dc:null, nota:notaAcerto, origem:'Caixa Viveiro - investimento'},
+    {data:'10/09/2026', valor:-1700, categoria:'Arrendamento Mensal 1', referencia:'Arrendamento Mensal 1', fornecedor:'FABIO ROGÉRIO GIACON', meioPgto:'Acerto de contas', cnpj:'', dc:null, nota:notaAcerto, origem:'Caixa Viveiro - investimento'},
+  ];
+  // correção: esse lançamento estava registrado como R$1.600 por engano — o valor certo é R$1.700
+  let mudou = false;
+  const corrigidoArrendamento = investimentosExtras.find(e=>e.data==='10/09/2026' && e.fornecedor==='FABIO ROGÉRIO GIACON' && e.referencia==='Arrendamento Mensal 1' && e.valor===-1600);
+  if(corrigidoArrendamento){
+    corrigidoArrendamento.valor = -1700;
+    mudou = true;
+  }
+  seeds.forEach(seed=>{
+    const existente = investimentosExtras.find(e=>e.data===seed.data && e.valor===seed.valor && e.fornecedor===seed.fornecedor && e.referencia===seed.referencia);
+    if(!existente){
+      investimentosExtras.push(seed);
+      mudou = true;
+    } else if(!existente.origem){
+      existente.origem = seed.origem;
+      mudou = true;
+    }
+  });
+  if(mudou) await saveInvestimentosExtras();
+}
+
+async function saveInvestimentosExtras(){
+  await storageSet(INVESTIMENTOS_EXTRAS_KEY, JSON.stringify(investimentosExtras));
+}
+
+function categorizarInvestimento(referencia, fornecedor, valor){
+  const ref = referencia.toLowerCase();
+  const forn = (fornecedor||'').toLowerCase();
+  if(ref.includes('pedreiro')) return 'Banheiro (Material + Mão de Obra)';
+  if(ref.includes('portão') || ref.includes('portao')) return 'Portão (Material + Mão de obra)';
+  if(ref.includes('banheiro')) return 'Banheiro (Material + Mão de Obra)';
+  if(ref.includes('pote') || ref.includes('vaso')) return 'Potes/Vasos 25L';
+  if(ref.includes('muda')) return 'Mudas';
+  if(ref.includes('caminh')) return 'Caminhão de Terra';
+  if(ref.includes('estaca')) return 'Estacas 2m';
+  if(ref.includes('funcion') || ref.includes('mão de obra') || ref.includes('mao de obra')) return 'Manutenção Quinzenal';
+  if(ref.includes('arrendamento')){
+    if(forn.includes('fabio rogério giacon') || forn.includes('fabio rogerio giacon')) return 'Arrendamento Mensal 1';
+    if(forn.includes('são josé') || forn.includes('sao jose')) return 'Arrendamento Mensal 2';
+    if(ref.includes('1')) return 'Arrendamento Mensal 1';
+    if(ref.includes('2')) return 'Arrendamento Mensal 2';
+    if(ref.includes('3')) return 'Arrendamento Mensal 3';
+    if(Math.abs(valor)===1500) return 'Arrendamento Mensal 1';
+    if(Math.abs(valor)===1700) return 'Arrendamento Mensal 2';
+    return 'Arrendamento Mensal 3';
+  }
+  if(ref.includes('adub')) return 'Adubo';
+  if(ref.includes('irriga')) return 'Sistema Irrigação';
+  if(ref.includes('limpeza')) return 'Limpeza Terreno';
+  if(ref.includes('energ')) return 'Energia';
+  return 'Outros';
+}
+
+// junta os lançamentos originais da planilha com os que o usuário for adicionando
+function todosInvestimentosComData(){
+  const extras = investimentosExtras.map(r=>({...r, dataObj: parseData(r.data)}));
+  return investimentosComData().concat(extras);
+}
+
+// Origem do dinheiro de um lançamento: 'Aporte Pará' (padrão / histórico) | 'Caixa Viveiro - investimento' | 'Caixa Viveiro - amortização Pará'
+function origemDe(r){
+  return r.origem || 'Aporte Pará';
+}
+
+function computeInvestimentosCorrigidos(dataReferencia){
+  return todosInvestimentosComData().map(r=>({
+    ...r,
+    valorCorrigidoRef: corrigirValor(r.valor, r.dataObj, dataReferencia)
+  }));
+}
+
+// tabela de meses únicos presentes nos lançamentos, em ordem cronológica
+function mesesUnicos(){
+  const dados = todosInvestimentosComData();
+  const map = new Map();
+  dados.forEach(r=>{
+    const key = mesRef(r.dataObj);
+    if(!map.has(key)) map.set(key, fimDoMes(r.dataObj));
+  });
+  return Array.from(map.entries())
+    .sort((a,b)=> a[1]-b[1])
+    .map(([label, fim])=>({label, fim}));
+}
+
+const CUSTO_UNITARIO_STORAGE_KEY = 'custoUnitarioMeses';
+let custoUnitarioDados = {}; // { 'nov/25': {valoresAPagar, mudasInventariadas}, ... }
+
+async function loadCustoUnitario(){
+  const value = await storageGet(CUSTO_UNITARIO_STORAGE_KEY);
+  if(value){
+    try{ custoUnitarioDados = JSON.parse(value); }catch(e){ custoUnitarioDados = {}; }
+  }
+  // seed com os valores históricos conhecidos, só se ainda não houver nada salvo
+  if(Object.keys(custoUnitarioDados).length === 0){
+    custoUnitarioDados = {
+      'nov/25': {valoresAPagar: 362847.18, mudasInventariadas: 6000},
+      'dez/25': {valoresAPagar: 337647.18, mudasInventariadas: 6500},
+      'jan/26': {valoresAPagar: 299422.18, mudasInventariadas: 6500},
+      'fev/26': {valoresAPagar: 225590.16, mudasInventariadas: 8886},
+      'mar/26': {valoresAPagar: 182138.80, mudasInventariadas: 14553},
+      'abr/26': {valoresAPagar: 134487.44, mudasInventariadas: 14553},
+      'mai/26': {valoresAPagar: 88136.08, mudasInventariadas: 18212},
+      'jun/26': {valoresAPagar: 70246.85, mudasInventariadas: 18212},
+      'jul/26': {valoresAPagar: 55381.75, mudasInventariadas: 18212},
+      'ago/26': {valoresAPagar: 38754.50, mudasInventariadas: 20294},
+    };
+    await saveCustoUnitario();
+  }
+  // correção: "valores a pagar" não é mais somado ao custo acumulado (que já vem dos lançamentos
+  // reais); remove o valor de set/26 que tinha sido pré-preenchido com R$7.200 por engano
+  if(custoUnitarioDados['set/26'] && custoUnitarioDados['set/26'].valoresAPagar === 7200 && !custoUnitarioDados['set/26']._ajusteV1){
+    custoUnitarioDados['set/26'].valoresAPagar = 0;
+    custoUnitarioDados['set/26']._ajusteV1 = true;
+    await saveCustoUnitario();
+  }
+  // correção: meses fechados (até ago/26) têm "valores a pagar" travado no valor final acordado;
+  // se algum navegador tiver um valor antigo/diferente salvo em storage local, sobrescreve aqui
+  // para garantir que o valor fechado seja sempre exibido, independente do que já estava salvo.
+  const VALORES_FECHADOS = {
+    'nov/25': 362847.18,
+    'dez/25': 337647.18,
+    'jan/26': 299422.18,
+    'fev/26': 225590.16,
+    'mar/26': 182138.80,
+    'abr/26': 134487.44,
+    'mai/26': 88136.08,
+    'jun/26': 70246.85,
+    'jul/26': 55381.75,
+    'ago/26': 38754.50,
+  };
+  let corrigidoFechamento = false;
+  Object.keys(VALORES_FECHADOS).forEach(mes=>{
+    if(!custoUnitarioDados[mes]) custoUnitarioDados[mes] = {};
+    if(custoUnitarioDados[mes].valoresAPagar !== VALORES_FECHADOS[mes]){
+      custoUnitarioDados[mes].valoresAPagar = VALORES_FECHADOS[mes];
+      corrigidoFechamento = true;
+    }
+  });
+  if(corrigidoFechamento) await saveCustoUnitario();
+}
+
+async function saveCustoUnitario(){
+  await storageSet(CUSTO_UNITARIO_STORAGE_KEY, JSON.stringify(custoUnitarioDados));
+}
+
+// ---------- ESTOQUE DE MUDAS ----------
+const ESTOQUE_MUDAS_STORAGE_KEY = 'estoqueMudasDados';
+let estoqueMudasDados = {}; // { 'mmm/aa': {estoqueBase, perdas, novasMudas} } — valores acumulados, preenchidos manualmente
+
+async function loadEstoqueMudas(){
+  const value = await storageGet(ESTOQUE_MUDAS_STORAGE_KEY);
+  if(value){
+    try{ estoqueMudasDados = JSON.parse(value); }catch(e){ estoqueMudasDados = {}; }
+  }
+}
+
+async function saveEstoqueMudas(){
+  await storageSet(ESTOQUE_MUDAS_STORAGE_KEY, JSON.stringify(estoqueMudasDados));
+}
+
+// ---------- RENDIMENTO DO CAIXA DO VIVEIRO ----------
+const RENDIMENTO_CAIXA_STORAGE_KEY = 'rendimentoCaixaViveiro';
+let rendimentoCaixaDados = {}; // { 'mmm/aa': valorEmReais } — informado manualmente, mês a mês
+
+async function loadRendimentoCaixa(){
+  const value = await storageGet(RENDIMENTO_CAIXA_STORAGE_KEY);
+  if(value){
+    try{ rendimentoCaixaDados = JSON.parse(value); }catch(e){ rendimentoCaixaDados = {}; }
+  }
+}
+
+async function saveRendimentoCaixa(){
+  await storageSet(RENDIMENTO_CAIXA_STORAGE_KEY, JSON.stringify(rendimentoCaixaDados));
+}
+
+// mudas em estoque, mês a mês: histórico usa a inventariação já validada (fixa);
+// a partir do 1º mês em cadeia, rola: estoque anterior − recebido no mês − perdas no mês + novas mudas no mês.
+// "vendidas à receber" é só informativo (saldo em aberto), não entra na conta.
+function computeEstoqueMudas(){
+  const meses = mesesUnicos();
+  let estoqueAnterior = null;
+  let vendidoPagoAnterior = 0;
+
+  return meses.map(m=>{
+    const dadosMes = estoqueMudasDados[m.label] || {perdas:0, novasMudas:0};
+    const vendido = vendidoAcumulado(m.fim);
+    const vendidoPagoAcum = vendidoPagoAcumulado(m.fim);
+    const vendidasAReceber = Math.max(vendido - vendidoPagoAcum, 0);
+    const vendidasRecebidasNoMes = vendidoPagoAcum - vendidoPagoAnterior;
+
+    let estoque;
+    if(m.fim <= ULTIMO_MES_HISTORICO_FIM || estoqueAnterior === null){
+      // histórico: inventariação já validada contra a planilha (fixa, não recalculada)
+      estoque = (custoUnitarioDados[m.label]||{}).mudasInventariadas || 0;
+    } else {
+      estoque = estoqueAnterior - vendidasRecebidasNoMes - (dadosMes.perdas||0) + (dadosMes.novasMudas||0);
+    }
+
+    estoqueAnterior = estoque;
+    vendidoPagoAnterior = vendidoPagoAcum;
+
+    return {
+      label: m.label,
+      fim: m.fim,
+      estoque,
+      perdas: dadosMes.perdas||0,
+      novasMudas: dadosMes.novasMudas||0,
+      vendidasAReceber,
+      vendidasRecebidas: vendidasRecebidasNoMes,
+      eCadeia: !(m.fim <= ULTIMO_MES_HISTORICO_FIM)
+    };
+  });
+}
+
+function attachEstoqueMudasInputListeners(container){
+  container.querySelectorAll('input[data-mes]').forEach(input=>{
+    input.addEventListener('change', async ()=>{
+      const mes = input.dataset.mes;
+      const campo = input.dataset.campo;
+      if(!estoqueMudasDados[mes]) estoqueMudasDados[mes] = {perdas:0, novasMudas:0};
+      const valor = parseIntInput(input.value);
+      input.value = fmtIntInput(valor);
+      estoqueMudasDados[mes][campo] = valor;
+      await saveEstoqueMudas();
+      renderEstoqueMudas();
+      renderCustoUnitario();
+    });
+  });
+}
+
+function renderEstoqueMudas(){
+  const body = document.getElementById('estoqueMudasBody');
+  if(!body) return;
+  const dados = computeEstoqueMudas();
+
+  body.innerHTML = dados.map(f=>{
+    const editavel = mesEhEditavel(f.fim);
+    return `
+      <tr>
+        <td>${f.label}</td>
+        <td class="num" style="font-weight:600;color:var(--forest);">${fmtNum(Math.round(f.estoque))}</td>
+        <td class="num">${f.vendidasAReceber>0?fmtNum(Math.round(f.vendidasAReceber)):'—'}</td>
+        <td class="num">${f.vendidasRecebidas>0?fmtNum(Math.round(f.vendidasRecebidas)):'—'}</td>
+        <td class="num">
+          ${editavel
+            ? `<input type="text" inputmode="numeric" data-mes="${f.label}" data-campo="perdas" value="${fmtIntInput(f.perdas)}" style="width:80px;text-align:right;padding:4px 6px;font-size:12.5px;">`
+            : `<span title="Valor histórico, não editável">${f.perdas?fmtNum(f.perdas):'—'}</span>`}
+          <span class="print-value">${fmtNum(f.perdas)}</span>
+        </td>
+        <td class="num">
+          ${editavel
+            ? `<input type="text" inputmode="numeric" data-mes="${f.label}" data-campo="novasMudas" value="${fmtIntInput(f.novasMudas)}" style="width:90px;text-align:right;padding:4px 6px;font-size:12.5px;">`
+            : `<span title="Valor histórico, não editável">${f.novasMudas?fmtNum(f.novasMudas):'—'}</span>`}
+          <span class="print-value">${fmtNum(f.novasMudas)}</span>
+        </td>
+      </tr>
+  `;}).join('');
+
+  attachEstoqueMudasInputListeners(body);
+}
+
+const DAP_STORAGE_KEY = 'dapPorEspecie';
+let dapDados = {}; // { 'ESPECIE': 'DAP2', ... }
+
+async function loadDap(){
+  const value = await storageGet(DAP_STORAGE_KEY);
+  if(value){
+    try{ dapDados = JSON.parse(value); }catch(e){ dapDados = {}; }
+  }
+  // classifica como DAP2 toda espécie que já está em estoque e ainda não tem classificação
+  let mudou = false;
+  computeSpecies().forEach(e=>{
+    if(e.qtde > 0 && !dapDados[e.especie]){
+      dapDados[e.especie] = 'DAP2';
+      mudou = true;
+    }
+  });
+  if(mudou) await saveDap();
+}
+
+async function saveDap(){
+  await storageSet(DAP_STORAGE_KEY, JSON.stringify(dapDados));
+}
+
+function vendidoAcumulado(dataFim){
+  return movimentacoes
+    .filter(m=>m.evento==='Saída' && parseData(m.data) <= dataFim)
+    .reduce((s,m)=>s+Math.abs(m.qtde),0);
+}
+
+// ---------- PAGAMENTOS (registro de valores recebidos por comprador) ----------
+const PAGAMENTOS_STORAGE_KEY = 'pagamentosCompradores';
+let pagamentos = []; // [{comprador, data, valor}]
+
+async function loadPagamentos(){
+  const value = await storageGet(PAGAMENTOS_STORAGE_KEY);
+  if(value){
+    try{ pagamentos = JSON.parse(value); }catch(e){ pagamentos = []; }
+  }
+  const comprovante4250 = {
+    origem:'Maria Dos Remedios de Souza', destino:'Bruno Canevassi Leoni',
+    horario:'22:15:17', transacaoMercadoPago:'177061817535',
+    idPix:'E10573521202609090901158qQw8oFt0Sd'
+  };
+  // reconciliação: lista final confirmada dos pagamentos da Boa Esperança (venda de julho/26)
+  const jaReconciliado = pagamentos.some(p=>p._reconciliadoV2);
+  if(!jaReconciliado){
+    pagamentos = pagamentos.filter(p=>p.comprador!=='Boa Esperança');
+    pagamentos.push(
+      {comprador:'Boa Esperança', data:'05/09/2026', valor:5500, meio:'Acerto de contas a pagar', detalhe:'Compensação com outras contas a pagar do Viveiro', _reconciliadoV2:true},
+      {comprador:'Boa Esperança', data:'08/09/2026', valor:4250, meio:'PIX', destinoPix:'312.120.298-79', origem:'Maria Dos Remedios de Souza', comprovante:comprovante4250, _reconciliadoV2:true},
+      {comprador:'Boa Esperança', data:'09/09/2026', valor:2770, meio:'PIX', destinoPix:'312.120.298-79', origem:'Maria Dos Remedios de Souza', _reconciliadoV2:true},
+    );
+    await savePagamentos();
+  }
+  // ajuste: adiciona meio/detalhe/destino/origem corretos caso já existam sem essa informação
+  let ajustado = false;
+  pagamentos.forEach(p=>{
+    if(p.comprador==='Boa Esperança' && p.data==='05/09/2026' && p.valor===5500 && p.meio!=='Acerto de contas a pagar'){
+      p.meio = 'Acerto de contas a pagar';
+      p.detalhe = 'Compensação com outras contas a pagar do Viveiro';
+      ajustado = true;
+    }
+    if(p.comprador==='Boa Esperança' && p.valor===4250 && p.data==='09/09/2026'){
+      p.data = '08/09/2026';
+      ajustado = true;
+    }
+    if(p.comprador==='Boa Esperança' && p.valor===4250 && !p.destinoPix){
+      p.destinoPix = '312.120.298-79';
+      ajustado = true;
+    }
+    if(p.comprador==='Boa Esperança' && p.valor===2770 && !p.destinoPix){
+      p.destinoPix = '312.120.298-79';
+      ajustado = true;
+    }
+    if(p.comprador==='Boa Esperança' && (p.valor===4250 || p.valor===2770) && !p.origem){
+      p.origem = 'Maria Dos Remedios de Souza';
+      ajustado = true;
+    }
+  });
+  // novos pagamentos: R$300 (PIX, comprovante) e R$1.700 (acerto de outros serviços)
+  const novosSeeds = [
+    {comprador:'Boa Esperança', data:'10/09/2026', valor:300, meio:'PIX', destinoPix:'312.120.298-79', origem:'Maria Dos Remedios de Souza',
+      comprovante:{
+        origem:'Maria Dos Remedios de Souza', destino:'Bruno Canevassi Leoni',
+        horario:'20:21:37', idPix:'E105735212026091023218NCBYwwfA7g'
+      }},
+    {comprador:'Boa Esperança', data:'10/09/2026', valor:1700, meio:'Acerto de contas a pagar', detalhe:'Compensação com acerto de outros serviços'},
+  ];
+  novosSeeds.forEach(seed=>{
+    const existe = pagamentos.some(p=>p.comprador===seed.comprador && p.data===seed.data && p.valor===seed.valor);
+    if(!existe){
+      pagamentos.push(seed);
+      ajustado = true;
+    }
+  });
+  if(ajustado) await savePagamentos();
+}
+
+async function savePagamentos(){
+  await storageSet(PAGAMENTOS_STORAGE_KEY, JSON.stringify(pagamentos));
+}
+
+function totalVendidoComprador(comprador, dataFim){
+  return movimentacoes
+    .filter(m=>m.evento==='Saída' && m.comprador===comprador && parseData(m.data) <= dataFim)
+    .reduce((s,m)=> s + (m.precoUnitario ? Math.abs(m.qtde)*m.precoUnitario : 0), 0);
+}
+
+function totalPagoComprador(comprador, dataFim){
+  return pagamentos
+    .filter(p=>p.comprador===comprador && parseData(p.data) <= dataFim)
+    .reduce((s,p)=>s+p.valor, 0);
+}
+
+function listaCompradores(dataFim){
+  return Array.from(new Set(
+    movimentacoes.filter(m=>m.evento==='Saída' && m.comprador && parseData(m.data)<=dataFim).map(m=>m.comprador)
+  ));
+}
+
+// só as vendas já PAGAS reduzem a Conta Capital Pará — enquanto não forem pagas,
+// o saldo permanece o mesmo do início do mês. Com pagamento parcial, calculamos
+// proporcionalmente: fração paga do valor devido por comprador × unidades vendidas a ele
+function vendidoPagoAcumulado(dataFim){
+  let unidadesPagas = 0;
+  listaCompradores(dataFim).forEach(comprador=>{
+    const devido = totalVendidoComprador(comprador, dataFim);
+    if(devido <= 0) return;
+    const pago = Math.min(totalPagoComprador(comprador, dataFim), devido);
+    const fracaoPaga = pago / devido;
+    const unidadesComprador = movimentacoes
+      .filter(m=>m.evento==='Saída' && m.comprador===comprador && parseData(m.data)<=dataFim)
+      .reduce((s,m)=>s+Math.abs(m.qtde),0);
+    unidadesPagas += unidadesComprador * fracaoPaga;
+  });
+  return unidadesPagas;
+}
+
+function aReceberAcumulado(dataFim){
+  let total = 0;
+  listaCompradores(dataFim).forEach(comprador=>{
+    const devido = totalVendidoComprador(comprador, dataFim);
+    const pago = totalPagoComprador(comprador, dataFim);
+    total += Math.max(devido - pago, 0);
+  });
+  return total;
+}
+
+// Conta Capital do Viveiro (caixa): soma só os pagamentos que realmente entraram
+// na conta do Viveiro (PIX, dinheiro direto etc.) — "Acerto de contas a pagar" não
+// entra aqui porque esse valor nunca passou pela conta, foi direto pagar despesas
+function saldoCaixaViveiro(dataFim){
+  return pagamentos
+    .filter(p=> p.meio !== 'Acerto de contas a pagar' && parseData(p.data) <= dataFim)
+    .reduce((s,p)=>s+p.valor, 0);
+}
+
+// Conta Capital do Viveiro (acerto de contas): a parte que nunca entrou em caixa,
+// mas ainda assim quita despesas do Viveiro (pagas por terceiros em nome do comprador)
+function saldoAcertoViveiro(dataFim){
+  return pagamentos
+    .filter(p=> p.meio === 'Acerto de contas a pagar' && parseData(p.data) <= dataFim)
+    .reduce((s,p)=>s+p.valor, 0);
+}
+
+// calcula, mês a mês em ordem cronológica, o Custo Total Acumulado e o Custo Unitário.
+// meses até ULTIMA_DATA_HISTORICA usam o método direto (soma de todos os lançamentos originais,
+// corrigidos até aquele mês — é o que bate com a planilha). Meses novos (lançados depois disso)
+// usam o método em cadeia: saldo do mês anterior corrigido por juros, MENOS o custo das unidades
+// recebidas no mês (custo unitário anterior × unidades recebidas), MAIS o investimento REAL do mês
+// (soma dos lançamentos já registrados, mesmo valor do "Investimento Desembolsado"). Esse total é
+// o custo acumulado REAL — bate com o Resumo Mensal e a Evolução Conta Capital.
+// "Valores a pagar" (Custo Unitário) é só uma ESTIMATIVA de custos futuros ainda não lançados;
+// entra apenas no cálculo do Custo Unitário (para sensibilizar o custo por muda), nunca no
+// Custo Total Acumulado Atualizado exibido.
+function computeMesesFinanceiro(){
+  const meses = mesesUnicos();
+  const dados = todosInvestimentosComData();
+  const estoqueMudas = computeEstoqueMudas(); // mesma ordem de meses
+  let custoAcumuladoAnterior = null;
+  let custoUnitarioAnterior = null;
+  let vendidoPagoAnterior = 0;
+  let fimMesAnterior = null;
+
+  return meses.map((m, idx)=>{
+    const dadosMes = custoUnitarioDados[m.label] || {valoresAPagar:0, perdidas:0, plantadas:0};
+    const vendido = vendidoAcumulado(m.fim);
+    const vendidoPago = vendidoPagoAcumulado(m.fim);
+    const aReceber = aReceberAcumulado(m.fim);
+    const recebidoNoMes = vendidoPago - vendidoPagoAnterior;
+    const mudasInventariadas = estoqueMudas[idx].estoque;
+    const custoAcumuladoInicial = custoAcumuladoAnterior || 0;
+
+    let custoAcumulado, divisorUnidades, investimentoNoMes;
+    const isHistorico = m.fim <= ULTIMO_MES_HISTORICO_FIM || custoAcumuladoAnterior === null;
+    if(isHistorico){
+      // histórico: método direto, já validado com a planilha original
+      custoAcumulado = Math.abs(dados
+        .filter(r=>r.dataObj <= m.fim)
+        .reduce((s,r)=> s + corrigirValor(r.valor, r.dataObj, m.fim), 0));
+      divisorUnidades = mudasInventariadas
+        ? Math.max(mudasInventariadas - vendidoPago - (dadosMes.perdidas||0) + (dadosMes.plantadas||0), 0)
+        : 0;
+      investimentoNoMes = dados
+        .filter(r=>mesRef(r.dataObj)===m.label)
+        .reduce((s,r)=>s+Math.abs(r.valor), 0);
+    } else {
+      const diasNoMes = (m.fim - fimMesAnterior) / (1000*60*60*24);
+      investimentoNoMes = dados
+        .filter(r=>mesRef(r.dataObj)===m.label)
+        .reduce((s,r)=>s+Math.abs(r.valor), 0);
+      custoAcumulado = custoAcumuladoAnterior * Math.pow(1.12, diasNoMes/365)
+        - (custoUnitarioAnterior||0) * recebidoNoMes
+        + investimentoNoMes;
+      // a partir daqui, mudasInventariadas já vem líquida de vendas/perdas/novas mudas (Estoque de Mudas)
+      divisorUnidades = mudasInventariadas;
+    }
+
+    const abatimento = (custoUnitarioAnterior||0) * recebidoNoMes;
+    // correção financeira = residual que fecha a conta (Inicial + Correção + Investimento − Abatimento = Total)
+    const correcaoFinanceira = custoAcumulado - custoAcumuladoInicial - investimentoNoMes + abatimento;
+
+    // custo unitário: (custo acumulado real + valores a pagar, estimativa) ÷ mudas inventariadas
+    const custoTotal = custoAcumulado + (dadosMes.valoresAPagar||0);
+    const custoUnitario = divisorUnidades > 0 ? custoTotal / divisorUnidades : 0;
+    const estoqueFinal = divisorUnidades;
+    const custoVendido = vendidoPago * custoUnitario;
+
+    custoAcumuladoAnterior = custoAcumulado;
+    if(custoUnitario > 0) custoUnitarioAnterior = custoUnitario;
+    vendidoPagoAnterior = vendidoPago;
+    fimMesAnterior = m.fim;
+
+    return {
+      label: m.label, fim: m.fim,
+      custoAcumuladoInicial, correcaoFinanceira, investimentoNoMes, abatimento,
+      custoAcumulado, valoresAPagar: dadosMes.valoresAPagar||0, custoTotal, mudasInventariadas,
+      mudasVendidasNoMes: recebidoNoMes, mudasPlantadas: estoqueMudas[idx].novasMudas, mudasPerdidas: estoqueMudas[idx].perdas,
+      custoUnitario, vendido, vendidoPago, aReceber, custoVendido, estoqueFinal,
+      eCadeia: !(m.fim <= ULTIMO_MES_HISTORICO_FIM)
+    };
+  });
+}
+
+// Evolução Conta Capital: Conta Capital Pará, Conta Capital Viveiro e Caixa do Viveiro,
+// mês a mês, com dinâmica própria (independente do Custo Total Acumulado acima).
+// A origem de cada lançamento (origemDe) decide para onde ele conta:
+//  - 'Aporte Pará': cresce a Conta Capital Pará, não mexe no caixa
+//  - 'Caixa Viveiro - investimento': cresce a Conta Capital Viveiro e sai do Caixa do Viveiro
+//  - 'Caixa Viveiro - amortização Pará': reduz a Conta Capital Pará e sai do Caixa do Viveiro
+// Caixa do Viveiro = receita total do Viveiro (PIX + acerto de contas) ainda não usada em
+// investimentos próprios nem em amortizações da Conta Pará.
+function computeEvolucaoContaCapital(){
+  const meses = mesesUnicos();
+  const dados = todosInvestimentosComData();
+  let contaParaAnterior = null;
+  let contaViveiroAnterior = 0;
+  let caixaViveiroAnterior = 0;
+  let fimMesAnterior = null;
+
+  return meses.map(m=>{
+    let contaPara, contaViveiro, caixaViveiro;
+    let amortizacoesMes=0, aportesParaMes=0, investimentosViveiroMes=0, recebimentosMes=0, rendimentoMes=0;
+    const contaParaInicial = contaParaAnterior || 0;
+    const contaViveiroInicial = contaViveiroAnterior;
+    const caixaViveiroInicial = caixaViveiroAnterior;
+    let correcaoJurosPara = 0;
+
+    if(m.fim <= ULTIMO_MES_HISTORICO_FIM || contaParaAnterior === null){
+      // histórico: soma direta de todos os aportes Pará corrigidos até a data (mesmo método do Custo Acumulado histórico)
+      contaPara = Math.abs(dados
+        .filter(r=>r.dataObj <= m.fim && origemDe(r)==='Aporte Pará')
+        .reduce((s,r)=> s + corrigirValor(r.valor, r.dataObj, m.fim), 0));
+      contaViveiro = 0;
+      caixaViveiro = 0;
+      // decompõe pro extrato: aportes do mês (bruto) + correção (residual que fecha a conta)
+      aportesParaMes = dados
+        .filter(r=>mesRef(r.dataObj)===m.label && origemDe(r)==='Aporte Pará')
+        .reduce((s,r)=>s+Math.abs(r.valor), 0);
+      correcaoJurosPara = contaPara - contaParaInicial - aportesParaMes + amortizacoesMes;
+    } else {
+      const doMes = dados.filter(r=>mesRef(r.dataObj)===m.label);
+      const diasNoMes = (m.fim - fimMesAnterior) / (1000*60*60*24);
+
+      amortizacoesMes = doMes.filter(r=>origemDe(r)==='Caixa Viveiro - amortização Pará').reduce((s,r)=>s+Math.abs(r.valor),0);
+      aportesParaMes = doMes.filter(r=>origemDe(r)==='Aporte Pará').reduce((s,r)=>s+Math.abs(r.valor),0);
+      investimentosViveiroMes = doMes.filter(r=>origemDe(r)==='Caixa Viveiro - investimento').reduce((s,r)=>s+Math.abs(r.valor),0);
+      // receita total do Viveiro (PIX + acerto de contas), não só o que passou pela conta corrente
+      recebimentosMes = (saldoCaixaViveiro(m.fim)+saldoAcertoViveiro(m.fim)) - (saldoCaixaViveiro(fimMesAnterior)+saldoAcertoViveiro(fimMesAnterior));
+      rendimentoMes = rendimentoCaixaDados[m.label] || 0;
+
+      contaPara = contaParaAnterior * Math.pow(1.12, diasNoMes/365) - amortizacoesMes + aportesParaMes;
+      correcaoJurosPara = contaPara - contaParaInicial + amortizacoesMes - aportesParaMes;
+      contaViveiro = contaViveiroAnterior + investimentosViveiroMes;
+      caixaViveiro = caixaViveiroAnterior + recebimentosMes - investimentosViveiroMes - amortizacoesMes + rendimentoMes;
+    }
+
+    contaParaAnterior = contaPara;
+    contaViveiroAnterior = contaViveiro;
+    caixaViveiroAnterior = caixaViveiro;
+    fimMesAnterior = m.fim;
+
+    return {
+      label: m.label, fim: m.fim, contaPara, contaViveiro, caixaViveiro,
+      contaParaInicial, contaViveiroInicial, caixaViveiroInicial,
+      correcaoJurosPara, amortizacoesMes, aportesParaMes, investimentosViveiroMes, recebimentosMes, rendimentoMes,
+      eCadeia: !(m.fim <= ULTIMO_MES_HISTORICO_FIM)
+    };
+  });
+}
+
+const hasCloudStorage = typeof window.storage !== 'undefined' && window.storage !== null && typeof window.storage.get === 'function';
+
+async function storageGet(key){
+  if(hasCloudStorage){
+    try{
+      const res = await window.storage.get(key, false);
+      return res ? res.value : null;
+    }catch(e){
+      console.warn('Armazenamento na nuvem indisponível ao ler, tentando local', e);
+      // cai para o localStorage abaixo
+    }
+  }
+  try{
+    return window.localStorage.getItem(key);
+  }catch(e){
+    return null;
+  }
+}
+
+async function storageSet(key, value){
+  if(hasCloudStorage){
+    try{
+      await window.storage.set(key, value, false);
+      return true;
+    }catch(e){
+      console.warn('Armazenamento na nuvem indisponível ao salvar, tentando local', e);
+      // cai para o localStorage abaixo em vez de falhar
+    }
+  }
+  try{
+    window.localStorage.setItem(key, value);
+    return true;
+  }catch(e){
+    console.error('Erro ao salvar (local)', e);
+    return false;
+  }
+}
+
+async function loadData(){
+  let loaded = false;
+  try{
+    const value = await storageGet(STORAGE_KEY);
+    if(value){
+      movimentacoes = JSON.parse(value);
+      loaded = true;
+    }
+  }catch(e){
+    console.error('Erro ao carregar dados', e);
+  }
+  if(!loaded){
+    movimentacoes = SEED.slice();
+  }
+  // migration: "Alternado"/"Corredor" sítio/lote is an access area between sítios, not a real sítio or lote
+  let migrated = false;
+  movimentacoes.forEach(m=>{
+    if(m.sitio === 'Alternado' || m.lote === 'Alternado' || m.sitio === 'Corredor' || m.lote === 'Corredor'){
+      m.sitio = 'Área de acesso';
+      m.lote = 'Área de acesso';
+      migrated = true;
+    }
+  });
+  // migration: fix incorrect dates on original saída records (were all seeded as 13/08/2026)
+  const correcoesSaida = [
+    {especie:'ACOITA CAVALO', qtde:-40, sitio:'1', lote:'3', dataAntiga:'13/08/2026', dataNova:'30/07/2026'},
+    {especie:'GUAPURUVU', qtde:-26, sitio:'1', lote:'2', dataAntiga:'13/08/2026', dataNova:'30/07/2026'},
+    {especie:'ACASSIA VERMELHA', qtde:-25, sitio:'1', lote:'1', dataAntiga:'13/08/2026', dataNova:'01/07/2026'},
+    {especie:'EMBAÚBA', qtde:-15, sitio:'1', lote:'2', dataAntiga:'13/08/2026', dataNova:'01/07/2026'},
+    {especie:'TAMBORIL', qtde:-15, sitio:'1', lote:'2', dataAntiga:'13/08/2026', dataNova:'01/07/2026'},
+  ];
+  movimentacoes.forEach(m=>{
+    if(m.evento !== 'Saída' || m.data !== '13/08/2026') return;
+    const fix = correcoesSaida.find(c =>
+      c.especie === m.especie && c.qtde === m.qtde && c.sitio === m.sitio && c.lote === m.lote && c.dataAntiga === m.data
+    );
+    if(fix){
+      m.data = fix.dataNova;
+      migrated = true;
+    }
+  });
+  // migration: add buyer/price/payment info to the first known sale (Dioni Maranhão)
+  const infoVendaDioni = [
+    {especie:'ACOITA CAVALO', qtde:-40, sitio:'1', lote:'3', data:'30/07/2026'},
+    {especie:'GUAPURUVU', qtde:-26, sitio:'1', lote:'2', data:'30/07/2026'},
+    {especie:'ACASSIA VERMELHA', qtde:-25, sitio:'1', lote:'1', data:'01/07/2026'},
+    {especie:'EMBAÚBA', qtde:-15, sitio:'1', lote:'2', data:'01/07/2026'},
+    {especie:'TAMBORIL', qtde:-15, sitio:'1', lote:'2', data:'01/07/2026'},
+  ];
+  movimentacoes.forEach(m=>{
+    if(m.evento !== 'Saída' || m.comprador) return;
+    const match = infoVendaDioni.find(c =>
+      c.especie === m.especie && c.qtde === m.qtde && c.sitio === m.sitio && c.lote === m.lote && c.data === m.data
+    );
+    if(match){
+      m.comprador = 'Boa Esperança';
+      m.precoUnitario = 120;
+      m.pago = false;
+      migrated = true;
+    }
+  });
+  // migration: adiciona/corrige a venda de 04/09/2026 para a Pará (sítio/lote confirmados)
+  const vendaPara = [
+    {especie:'BABOSA', qtde:-42, data:'04/09/2026', sitio:'1', lote:'1'},
+    {especie:'PAU JACARE', qtde:-33, data:'04/09/2026', sitio:'1', lote:'1'},
+    {especie:'AROEIRA PIMENTEIRA', qtde:-44, data:'04/09/2026', sitio:'1', lote:'2'},
+  ];
+  vendaPara.forEach(v=>{
+    const existente = movimentacoes.find(m=>
+      m.evento==='Saída' && m.especie===v.especie && m.qtde===v.qtde && m.data===v.data && m.comprador==='Pará'
+    );
+    if(!existente){
+      movimentacoes.push({
+        evento:'Saída', especie:v.especie, qtde:v.qtde,
+        sitio:v.sitio, lote:v.lote, data:v.data,
+        comprador:'Pará', precoUnitario:90, pago:false
+      });
+      migrated = true;
+    } else if(existente.sitio === 'A definir' || existente.lote === 'A definir'){
+      existente.sitio = v.sitio;
+      existente.lote = v.lote;
+      migrated = true;
+    }
+  });
+  // migration: corrige CAPIXINGUI que ficou salvo como Sítio 1/Lote 1 em versões antigas (correto é Sítio 1/Lote 2)
+  movimentacoes.forEach(m=>{
+    if(m.evento==='Entrada' && m.especie==='CAPIXINGUI' && m.sitio==='1' && m.lote==='1'){
+      m.lote = '2';
+      migrated = true;
+    }
+  });
+  // migration: renomeia o comprador "Dioni Maranhão" (venda) para "Boa Esperança"
+  movimentacoes.forEach(m=>{
+    if(m.evento==='Saída' && m.comprador==='Dioni Maranhão'){
+      m.comprador = 'Boa Esperança';
+      migrated = true;
+    }
+  });
+  if(!loaded || migrated) await saveData();
+}
+
+async function saveData(){
+  const ok = await storageSet(STORAGE_KEY, JSON.stringify(movimentacoes));
+  if(!ok) toast('Não foi possível salvar os dados neste dispositivo.');
+}
+
+function computeStock(){
+  // group by especie+sitio+lote
+  const map = new Map();
+  movimentacoes.forEach(m=>{
+    const key = m.especie + '|' + m.sitio + '|' + m.lote;
+    if(!map.has(key)) map.set(key, {especie:m.especie, sitio:m.sitio, lote:m.lote, qtde:0});
+    map.get(key).qtde += m.qtde;
+  });
+  return Array.from(map.values());
+}
+
+function computeStockDetalhado(){
+  // group by especie+sitio+lote, com entrada e saída separadas
+  const map = new Map();
+  movimentacoes.forEach(m=>{
+    const key = m.especie + '|' + m.sitio + '|' + m.lote;
+    if(!map.has(key)) map.set(key, {especie:m.especie, sitio:m.sitio, lote:m.lote, entrada:0, saida:0});
+    const e = map.get(key);
+    if(m.evento === 'Entrada') e.entrada += m.qtde;
+    else e.saida += Math.abs(m.qtde);
+  });
+  return Array.from(map.values()).map(e=>({...e, qtde: e.entrada - e.saida}));
+}
+
+function computeLotes(){
+  // group only by sitio+lote (sum across all species)
+  const map = new Map();
+  movimentacoes.forEach(m=>{
+    const key = m.sitio + '|' + m.lote;
+    if(!map.has(key)) map.set(key, {sitio:m.sitio, lote:m.lote, qtde:0});
+    map.get(key).qtde += m.qtde;
+  });
+  return Array.from(map.values());
+}
+
+function computeSpecies(){
+  const map = new Map();
+  movimentacoes.forEach(m=>{
+    if(!map.has(m.especie)) map.set(m.especie, {especie:m.especie, sitios:new Set(), lotes:new Set(), qtde:0});
+    const e = map.get(m.especie);
+    e.sitios.add(m.sitio);
+    e.lotes.add(m.sitio+'|'+m.lote);
+    e.qtde += m.qtde;
+  });
+  return Array.from(map.values());
+}
+
+function computeSpeciesFiltered(filtroSitio, filtroLote){
+  let stock = computeStock().filter(r=>r.qtde!==0);
+  if(filtroSitio) stock = stock.filter(r=>r.sitio===filtroSitio);
+  if(filtroLote) stock = stock.filter(r=>r.lote===filtroLote);
+  const map = new Map();
+  stock.forEach(r=>{
+    if(!map.has(r.especie)) map.set(r.especie, {especie:r.especie, sitios:new Set(), lotes:new Set(), qtde:0});
+    const e = map.get(r.especie);
+    e.sitios.add(r.sitio);
+    e.lotes.add(r.sitio+'|'+r.lote);
+    e.qtde += r.qtde;
+  });
+  return Array.from(map.values());
+}
+
+function computeEspecieBreakdown(especie, filtroSitio, filtroLote){
+  let rows = computeStock().filter(r=>r.especie===especie && r.qtde!==0);
+  if(filtroSitio) rows = rows.filter(r=>r.sitio===filtroSitio);
+  if(filtroLote) rows = rows.filter(r=>r.lote===filtroLote);
+  return rows.sort((a,b)=> a.sitio.localeCompare(b.sitio,'pt-BR') || a.lote.localeCompare(b.lote,'pt-BR'));
+}
+
+function uniqueSorted(arr){
+  return Array.from(new Set(arr)).sort((a,b)=>a.localeCompare(b,'pt-BR'));
+}
+
+function renderSummary(){
+  const stock = computeStock();
+  const totalMudas = stock.reduce((s,r)=>s+r.qtde, 0);
+  const especies = new Set(movimentacoes.map(m=>m.especie)).size;
+  const sitiosTotal = new Set(movimentacoes.filter(m=>m.sitio!=='Área de acesso').map(m=>m.sitio)).size;
+  const lotes = computeLotes().filter(r=>r.sitio!=='Área de acesso');
+  const lotesTotal = lotes.length;
+  const lotesAtivos = lotes.filter(r=>r.qtde>0).length;
+  const entradas = movimentacoes.filter(m=>m.evento==='Entrada').length;
+  const saidas = movimentacoes.filter(m=>m.evento==='Saída').length;
+  const qtdeEntradas = movimentacoes.filter(m=>m.evento==='Entrada').reduce((s,m)=>s+m.qtde, 0);
+  const qtdeSaidas = movimentacoes.filter(m=>m.evento==='Saída').reduce((s,m)=>s+Math.abs(m.qtde), 0);
+  const qtdeAlternado = movimentacoes.filter(m=>m.sitio==='Área de acesso').reduce((s,m)=>s+m.qtde, 0);
+
+  const grupos = [
+    {
+      titulo: 'Informações gerais',
+      cards: [
+        {label:'Mudas em estoque', value: fmtNum(totalMudas)},
+        {label:'Espécies cadastradas', value: fmtNum(especies)},
+      ]
+    },
+    {
+      titulo: 'Movimentações',
+      cards: [
+        {label:'Total de mudas — entradas', value: fmtNum(qtdeEntradas)},
+        {label:'Total de mudas — saídas', value: fmtNum(qtdeSaidas)},
+      ]
+    },
+    {
+      titulo: 'Estrutura',
+      cards: [
+        {label:'Sítios', value: fmtNum(sitiosTotal)},
+        {label:'Lotes', value: fmtNum(lotesTotal)},
+        {label:'Lotes com estoque', value: fmtNum(lotesAtivos)},
+        {label:'Alternado', value: `${fmtNum(qtdeAlternado)} <span style="font-size:13px;font-weight:500;color:var(--ink-faint);">(Resedás)</span>`},
+      ]
+    },
+  ];
+
+  document.getElementById('summaryCards').innerHTML = grupos.map(g => `
+    <div class="summary-group">
+      <div class="summary-group-title">${g.titulo}</div>
+      <div class="summary-row">
+        ${g.cards.map(c=>`
+          <div class="metric">
+            <div class="metric-label">${c.label}</div>
+            <div class="metric-value">${c.value}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderEstoqueFiltros(){
+  const sitios = uniqueSorted(movimentacoes.map(m=>m.sitio));
+  const sel = document.getElementById('estoqueFiltroSitio');
+  const current = sel.value;
+  sel.innerHTML = '<option value="">Todos os sítios</option>' + sitios.map(s=>`<option value="${s}">${s==='Área de acesso'?s:'Sítio '+s}</option>`).join('');
+  if(sitios.includes(current)) sel.value = current;
+
+  const filtroSitio = sel.value;
+  const lotesBase = filtroSitio
+    ? movimentacoes.filter(m=>m.sitio===filtroSitio)
+    : movimentacoes;
+  const lotes = uniqueSorted(lotesBase.map(m=>m.lote));
+  const selLote = document.getElementById('estoqueFiltroLote');
+  const currentLote = selLote.value;
+  selLote.innerHTML = '<option value="">Todos os lotes</option>' + lotes.map(l=>`<option value="${l}">${l==='Área de acesso'?l:'Lote '+l}</option>`).join('');
+  if(lotes.includes(currentLote)) selLote.value = currentLote;
+}
+
+function renderEspFiltros(){
+  const sitios = uniqueSorted(movimentacoes.map(m=>m.sitio));
+  const sel = document.getElementById('espFiltroSitio');
+  const current = sel.value;
+  sel.innerHTML = '<option value="">Todos os sítios</option>' + sitios.map(s=>`<option value="${s}">${s==='Área de acesso'?s:'Sítio '+s}</option>`).join('');
+  if(sitios.includes(current)) sel.value = current;
+
+  const filtroSitio = sel.value;
+  const lotesBase = filtroSitio
+    ? movimentacoes.filter(m=>m.sitio===filtroSitio)
+    : movimentacoes;
+  const lotes = uniqueSorted(lotesBase.map(m=>m.lote));
+  const selLote = document.getElementById('espFiltroLote');
+  const currentLote = selLote.value;
+  selLote.innerHTML = '<option value="">Todos os lotes</option>' + lotes.map(l=>`<option value="${l}">${l==='Área de acesso'?l:'Lote '+l}</option>`).join('');
+  if(lotes.includes(currentLote)) selLote.value = currentLote;
+}
+
+function renderEstoque(){
+  const busca = buscaNorm(document.getElementById('estoqueBusca').value);
+  const filtroSitio = document.getElementById('estoqueFiltroSitio').value;
+  const filtroLote = document.getElementById('estoqueFiltroLote').value;
+  const filtroDap = document.getElementById('estoqueFiltroDap').value;
+  const filtroHotlist = document.getElementById('estoqueFiltroHotlist').value;
+  const filtroSaidas = document.getElementById('estoqueFiltroSaidas').value;
+  const hotlistNorms = new Set(INTERESSE.map(i=>i.norm));
+
+  let stock = computeStockDetalhado();
+  if(busca) stock = stock.filter(r=>buscaNorm(r.especie).includes(busca));
+  if(filtroSitio) stock = stock.filter(r=>r.sitio === filtroSitio);
+  if(filtroLote) stock = stock.filter(r=>r.lote === filtroLote);
+  if(filtroDap){
+    stock = stock.filter(r=>{
+      const dap = dapDados[r.especie] || '';
+      return filtroDap === '__sem__' ? !dap : dap === filtroDap;
+    });
+  }
+  if(filtroHotlist){
+    stock = stock.filter(r=>{
+      const naHotlist = hotlistNorms.has(normalizeNome(r.especie));
+      return filtroHotlist === 'sim' ? naHotlist : !naHotlist;
+    });
+  }
+  stock = stock.filter(r=>r.qtde !== 0 || r.entrada !== 0);
+
+  const grupos = new Map();
+  stock.forEach(r=>{
+    if(!grupos.has(r.sitio)) grupos.set(r.sitio, []);
+    grupos.get(r.sitio).push(r);
+  });
+  const sitiosOrdenados = Array.from(grupos.keys()).sort((a,b)=>a.localeCompare(b,'pt-BR'));
+
+  // agrega por espécie dentro de cada sítio, aplicando o filtro de Saídas já no agregado
+  const gruposAgregados = sitiosOrdenados.map(sitio=>{
+    const itensBrutos = grupos.get(sitio);
+    const porEspecie = new Map();
+    itensBrutos.forEach(r=>{
+      if(!porEspecie.has(r.especie)) porEspecie.set(r.especie, {entrada:0, saida:0, qtde:0});
+      const e = porEspecie.get(r.especie);
+      e.entrada += r.entrada;
+      e.saida += r.saida;
+      e.qtde += r.qtde;
+    });
+    let itens = Array.from(porEspecie.entries())
+      .map(([especie,v])=>({especie, ...v}))
+      .sort((a,b)=> a.especie.localeCompare(b.especie,'pt-BR'));
+    if(filtroSaidas){
+      itens = itens.filter(r=> filtroSaidas === 'com' ? r.saida > 0 : r.saida === 0);
+    }
+    return {sitio, itens};
+  }).filter(g=>g.itens.length>0);
+
+  const totalRegistros = gruposAgregados.reduce((s,g)=>s+g.itens.length,0);
+  const totalQtde = gruposAgregados.reduce((s,g)=>s+g.itens.reduce((s2,r)=>s2+r.qtde,0),0);
+  const totalBruto = gruposAgregados.reduce((s,g)=>s+g.itens.reduce((s2,r)=>s2+r.entrada,0),0);
+  const totalSaidas = gruposAgregados.reduce((s,g)=>s+g.itens.reduce((s2,r)=>s2+r.saida,0),0);
+  document.getElementById('estoqueTotal').innerHTML = `${fmtNum(totalRegistros)} registro(s) — <b>${fmtNum(totalBruto)}</b> total bruto — <b style="color:var(--danger);">${fmtNum(totalSaidas)}</b> vendidas — <b style="color:var(--forest);">${fmtNum(totalQtde)}</b> em estoque hoje`;
+
+  const container = document.getElementById('estoqueGroups');
+  if(gruposAgregados.length===0){
+    container.innerHTML = '<div class="table-wrap"><table><tbody><tr class="empty-row"><td>Nenhum registro de estoque encontrado.</td></tr></tbody></table></div>';
+    return;
+  }
+
+  container.innerHTML = gruposAgregados.map(({sitio, itens})=>{
+    const subtotal = itens.reduce((s,r)=>s+r.qtde,0);
+    const rotulo = sitio==='Área de acesso' ? sitio : `Sítio ${sitio}`;
+    return `
+    <div class="venda-group">
+      <div class="venda-group-header">
+        <span class="venda-group-date">${rotulo}</span>
+        <span class="venda-group-total">${fmtNum(subtotal)} mudas</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Espécie</th>
+              <th class="num">Total</th>
+              <th class="num">Saídas</th>
+              <th class="num">Estoque atual</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${itens.map(r=>`
+              <tr>
+                <td>${r.especie}</td>
+                <td class="num">${fmtNum(r.entrada)}</td>
+                <td class="num" style="${r.saida>0?'color:var(--danger);cursor:pointer;text-decoration:underline;':''}" ${r.saida>0?`onclick="abrirDetalheSaidas('${r.especie.replace(/'/g,"\\'")}', '${sitio.replace(/'/g,"\\'")}')" title="Ver detalhes da(s) venda(s)"`:''}>${r.saida>0?fmtNum(r.saida):'—'}</td>
+                <td class="num" style="font-weight:600;">${fmtNum(r.qtde)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderMovimentacoes(){
+  const busca = buscaNorm(document.getElementById('movBusca').value);
+  const filtroEvento = document.getElementById('movFiltroEvento').value;
+  let list = movimentacoes.slice();
+  if(busca) list = list.filter(m=>buscaNorm(m.especie).includes(busca));
+  if(filtroEvento) list = list.filter(m=>m.evento === filtroEvento);
+  applySort(list, 'mov');
+
+  const totalEntradas = list.filter(m=>m.evento==='Entrada').reduce((s,m)=>s+m.qtde,0);
+  const totalSaidas = list.filter(m=>m.evento==='Saída').reduce((s,m)=>s+Math.abs(m.qtde),0);
+  document.getElementById('movTotal').textContent = `${fmtNum(list.length)} registro(s) — ${fmtNum(totalEntradas)} entradas, ${fmtNum(totalSaidas)} saídas`;
+
+  const porSitio = new Map();
+  list.forEach(m=>{
+    if(!porSitio.has(m.sitio)) porSitio.set(m.sitio, {entradas:0, saidas:0});
+    const s = porSitio.get(m.sitio);
+    if(m.evento==='Entrada') s.entradas += m.qtde;
+    else s.saidas += Math.abs(m.qtde);
+  });
+  const sitiosOrdenados = Array.from(porSitio.keys()).sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  document.getElementById('movSubtotais').innerHTML = sitiosOrdenados.map(sitio=>{
+    const s = porSitio.get(sitio);
+    const rotulo = sitio==='Área de acesso' ? sitio : `Sítio ${sitio}`;
+    return `<span class="subtotal-chip">${rotulo}: <b>${fmtNum(s.entradas)}</b> entradas, <b>${fmtNum(s.saidas)}</b> saídas</span>`;
+  }).join('');
+
+  const body = document.getElementById('movBody');
+  if(list.length===0){
+    body.innerHTML = '<tr class="empty-row"><td colspan="6">Nenhuma movimentação encontrada.</td></tr>';
+    updateSortHeaders();
+    return;
+  }
+  body.innerHTML = list.map(m=>`
+    <tr>
+      <td>${m.data}</td>
+      <td><span class="badge ${m.evento==='Entrada'?'entrada':'saida'}">${m.evento}</span></td>
+      <td>${m.especie}</td>
+      <td>${m.sitio}</td>
+      <td>${m.lote}</td>
+      <td class="num">${m.qtde>0?'+':''}${fmtNum(m.qtde)}</td>
+    </tr>
+  `).join('');
+  updateSortHeaders();
+}
+
+function renderEspecies(){
+  const busca = buscaNorm(document.getElementById('espBusca').value);
+  const filtroSitio = document.getElementById('espFiltroSitio').value;
+  const filtroLote = document.getElementById('espFiltroLote').value;
+  const filtroDap = document.getElementById('espFiltroDap').value;
+  const filtroHotlist = document.getElementById('espFiltroHotlist').value;
+  const hotlistNorms = new Set(INTERESSE.map(i=>i.norm));
+
+  let list = computeSpeciesFiltered(filtroSitio, filtroLote).map(e=>({
+    especie: e.especie,
+    sitios: e.sitios.size,
+    lotes: e.lotes.size,
+    qtde: e.qtde
+  }));
+  if(busca) list = list.filter(e=>buscaNorm(e.especie).includes(busca));
+  if(filtroDap){
+    list = list.filter(e=>{
+      const dap = dapDados[e.especie] || '';
+      return filtroDap === '__sem__' ? !dap : dap === filtroDap;
+    });
+  }
+  if(filtroHotlist){
+    list = list.filter(e=>{
+      const naHotlist = hotlistNorms.has(normalizeNome(e.especie));
+      return filtroHotlist === 'sim' ? naHotlist : !naHotlist;
+    });
+  }
+  applySort(list, 'esp');
+
+  const totalQtde = list.reduce((s,e)=>s+e.qtde,0);
+  document.getElementById('espTotal').textContent = `${fmtNum(list.length)} espécie(s) — ${fmtNum(totalQtde)} mudas`;
+
+  const body = document.getElementById('espBody');
+  if(list.length===0){
+    body.innerHTML = '<tr class="empty-row"><td colspan="5">Nenhuma espécie encontrada.</td></tr>';
+    updateSortHeaders();
+    return;
+  }
+  const OPCOES_DAP = ['DAP1','DAP2','DAP3','Hotlist/Comercial'];
+  body.innerHTML = list.map(e=>{
+    const expandible = e.lotes > 1;
+    const dapAtual = dapDados[e.especie] || '';
+    const naHotlist = hotlistNorms.has(normalizeNome(e.especie));
+    const selectDap = `<select data-especie="${e.especie.replace(/"/g,'&quot;')}" class="dap-select" style="font-size:12px;padding:3px 5px;">
+      <option value="">—</option>
+      ${OPCOES_DAP.map(o=>`<option value="${o}" ${dapAtual===o?'selected':''}>${o}</option>`).join('')}
+    </select>`;
+    let rows = `
+    <tr>
+      <td>${e.especie}${naHotlist ? ' <span class="badge entrada" title="Espécie presente na Hotlist Manequinho">★ Hotlist</span>' : ''}</td>
+      <td class="num">${fmtNum(e.qtde)}</td>
+      <td class="num">${fmtNum(e.sitios)}</td>
+      <td class="num">${fmtNum(e.lotes)}</td>
+      <td>${selectDap}</td>
+    </tr>`;
+    if(expandible){
+      const breakdown = computeEspecieBreakdown(e.especie, filtroSitio, filtroLote);
+      rows += breakdown.map(b=>`
+        <tr style="background:#FBFAF6;">
+          <td style="padding-left:20px;color:var(--ink-soft);font-size:12.5px;">Sítio ${b.sitio} · Lote ${b.lote}</td>
+          <td class="num" style="color:var(--ink-soft);font-size:12.5px;">${fmtNum(b.qtde)}</td>
+          <td></td>
+          <td></td>
+          <td></td>
+        </tr>
+      `).join('');
+    }
+    return rows;
+  }).join('');
+  document.querySelectorAll('.dap-select').forEach(sel=>{
+    sel.addEventListener('change', async ()=>{
+      dapDados[sel.dataset.especie] = sel.value;
+      await saveDap();
+    });
+  });
+  updateSortHeaders();
+}
+
+function renderInteresse(){
+  const busca = buscaNorm(document.getElementById('interesseBusca').value);
+  const filtroStatus = document.getElementById('interesseFiltroStatus').value;
+  let list = computeInteresseStatus();
+  if(busca) list = list.filter(i => buscaNorm(i.comum).includes(busca) || buscaNorm(i.cientifico).includes(busca));
+  if(filtroStatus === 'tem') list = list.filter(i=>i.tem);
+  if(filtroStatus === 'nao') list = list.filter(i=>!i.tem);
+  applySort(list, 'interesse');
+
+  const jaTemCount = list.filter(i=>i.tem).length;
+  const naoTemCount = list.length - jaTemCount;
+  const totalMudas = list.reduce((s,i)=>s+(i.tem?i.qtde:0),0);
+  document.getElementById('interesseTotal').innerHTML = `
+    <span class="subtotal-chip">${fmtNum(list.length)} espécie(s) na lista</span>
+    <span class="subtotal-chip">${fmtNum(jaTemCount)} em estoque — <b>${fmtNum(totalMudas)} mudas</b></span>
+    <span class="subtotal-chip">${fmtNum(naoTemCount)} ainda não temos</span>
+  `;
+
+  const body = document.getElementById('interesseBody');
+  if(list.length===0){
+    body.innerHTML = '<tr class="empty-row"><td colspan="4">Nenhuma espécie encontrada.</td></tr>';
+    updateSortHeaders();
+    return;
+  }
+  body.innerHTML = list.map(i=>`
+    <tr>
+      <td>${i.comum}</td>
+      <td style="font-style:italic;color:var(--ink-soft);">${i.cientifico || '—'}</td>
+      <td>${i.tem ? '<span class="badge entrada">Já no estoque</span>' : '<span class="badge saida">Ainda não temos</span>'}</td>
+      <td class="num">${i.tem ? fmtNum(i.qtde) : '—'}</td>
+    </tr>
+  `).join('');
+  updateSortHeaders();
+}
+
+function computeVendas(){
+  const vendas = movimentacoes.filter(m=>m.evento==='Saída');
+  const map = new Map();
+  vendas.forEach(v=>{
+    if(!map.has(v.data)) map.set(v.data, []);
+    map.get(v.data).push(v);
+  });
+  const hoje = new Date();
+  const groups = Array.from(map.entries()).map(([data, itens])=>{
+    const compradores = new Set(itens.filter(i=>i.comprador).map(i=>i.comprador));
+    const comprador = compradores.size === 1 ? Array.from(compradores)[0] : (compradores.size > 1 ? 'Vários compradores' : null);
+    const valorGrupo = itens.reduce((s,i)=> s + (i.precoUnitario ? Math.abs(i.qtde)*i.precoUnitario : 0), 0);
+    let valorAReceber = valorGrupo;
+    let valorRecebido = 0;
+    if(comprador && comprador !== 'Vários compradores'){
+      const devidoTotal = totalVendidoComprador(comprador, hoje);
+      const pagoTotal = totalPagoComprador(comprador, hoje);
+      const fracaoPaga = devidoTotal > 0 ? Math.min(pagoTotal / devidoTotal, 1) : 0;
+      valorRecebido = valorGrupo * fracaoPaga;
+      valorAReceber = valorGrupo - valorRecebido;
+    }
+    return {
+      data, dataObj: parseData(data), itens,
+      total: itens.reduce((s,i)=>s+Math.abs(i.qtde),0),
+      comprador, valorAReceber, valorRecebido
+    };
+  });
+  groups.sort((a,b)=> b.dataObj - a.dataObj);
+  return groups;
+}
+
+function renderVendasFiltros(){
+  const vendas = movimentacoes.filter(m=>m.evento==='Saída');
+
+  const compradores = uniqueSorted(vendas.filter(v=>v.comprador).map(v=>v.comprador));
+  const temSemComprador = vendas.some(v=>!v.comprador);
+  const selComprador = document.getElementById('vendasFiltroComprador');
+  const currentComprador = selComprador.value;
+  selComprador.innerHTML = '<option value="">Todos os compradores</option>'
+    + compradores.map(c=>`<option value="${c}">${c}</option>`).join('')
+    + (temSemComprador ? '<option value="__sem__">Sem comprador informado</option>' : '');
+  if(currentComprador && (compradores.includes(currentComprador) || currentComprador==='__sem__')) selComprador.value = currentComprador;
+
+  const datas = Array.from(new Set(vendas.map(v=>v.data))).sort((a,b)=> parseData(b)-parseData(a));
+  const selData = document.getElementById('vendasFiltroData');
+  const currentData = selData.value;
+  selData.innerHTML = '<option value="">Todas as datas</option>' + datas.map(d=>`<option value="${d}">${d}</option>`).join('');
+  if(datas.includes(currentData)) selData.value = currentData;
+}
+
+function renderVendas(){
+  const busca = buscaNorm(document.getElementById('vendasBusca').value);
+  const filtroComprador = document.getElementById('vendasFiltroComprador').value;
+  const filtroData = document.getElementById('vendasFiltroData').value;
+
+  let groups = computeVendas();
+  if(filtroData) groups = groups.filter(g=>g.data===filtroData);
+  if(busca || filtroComprador){
+    groups = groups
+      .map(g=>({...g, itens: g.itens.filter(i=>
+        (!busca || buscaNorm(i.especie).includes(busca)) &&
+        (!filtroComprador || (filtroComprador==='__sem__' ? !i.comprador : i.comprador===filtroComprador))
+      )}))
+      .filter(g=>g.itens.length>0);
+  }
+  const hojeVendas = new Date();
+  groups = groups.map(g=>{
+    const valorGrupo = g.itens.reduce((s,i)=> s + (i.precoUnitario ? Math.abs(i.qtde)*i.precoUnitario : 0), 0);
+    let valorAReceber = valorGrupo;
+    let valorRecebido = 0;
+    if(g.comprador && g.comprador !== 'Vários compradores'){
+      const devidoTotal = totalVendidoComprador(g.comprador, hojeVendas);
+      const pagoTotal = totalPagoComprador(g.comprador, hojeVendas);
+      const fracaoPaga = devidoTotal > 0 ? Math.min(pagoTotal / devidoTotal, 1) : 0;
+      valorRecebido = valorGrupo * fracaoPaga;
+      valorAReceber = valorGrupo - valorRecebido;
+    }
+    return {
+      ...g,
+      total: g.itens.reduce((s,i)=>s+Math.abs(i.qtde),0),
+      valorAReceber, valorRecebido
+    };
+  });
+
+  const totalMudas = groups.reduce((s,g)=>s+g.total,0);
+  const totalRegistros = groups.reduce((s,g)=>s+g.itens.length,0);
+  const totalAReceber = groups.reduce((s,g)=>s+g.valorAReceber,0);
+  document.getElementById('vendasTotalMudas').textContent = fmtNum(totalMudas);
+  document.getElementById('vendasTotalRegistros').textContent = fmtNum(totalRegistros);
+
+  let receberEl = document.getElementById('vendasTotalAReceber');
+  if(totalAReceber > 0){
+    if(!receberEl){
+      const row = document.querySelector('#panel-vendas .summary-row');
+      const div = document.createElement('div');
+      div.className = 'metric';
+      div.innerHTML = `<div class="metric-label">A receber</div><div class="metric-value" id="vendasTotalAReceber" style="color:var(--clay-dark);"></div>`;
+      row.appendChild(div);
+      receberEl = document.getElementById('vendasTotalAReceber');
+    }
+    receberEl.textContent = fmtMoney(totalAReceber);
+  } else if(receberEl){
+    receberEl.closest('.metric').remove();
+  }
+
+  // ---- Resumo por comprador ----
+  const inputDataRef = document.getElementById('vendasDataReferencia');
+  if(!inputDataRef.value){
+    const hojeStr = new Date();
+    inputDataRef.value = `${hojeStr.getFullYear()}-${String(hojeStr.getMonth()+1).padStart(2,'0')}-${String(hojeStr.getDate()).padStart(2,'0')}`;
+  }
+  const [refY, refM, refD] = inputDataRef.value.split('-').map(Number);
+  const dataReferencia = new Date(refY, refM-1, refD, 23, 59, 59);
+
+  const nomesCompradores = new Set();
+  groups.forEach(g=>{
+    g.itens.forEach(i=>{
+      nomesCompradores.add(i.comprador || 'Sem comprador informado');
+    });
+  });
+  const compradoresLista = Array.from(nomesCompradores).map(nome=>{
+    const bruto = nome !== 'Sem comprador informado' ? totalVendidoComprador(nome, dataReferencia) : 0;
+    const pago = nome !== 'Sem comprador informado' ? Math.min(totalPagoComprador(nome, dataReferencia), bruto) : 0;
+    const aReceber = Math.max(bruto - pago, 0);
+    return {nome, bruto, aReceber, pago};
+  }).filter(c=>c.bruto > 0 || c.nome==='Sem comprador informado');
+  const compradoresOrdenados = compradoresLista.sort((a,b)=>b.aReceber-a.aReceber);
+  const bodyComprador = document.getElementById('vendasPorCompradorBody');
+  if(compradoresOrdenados.length===0){
+    bodyComprador.innerHTML = '<tr class="empty-row"><td colspan="4">Nenhuma venda encontrada até essa data.</td></tr>';
+  } else {
+    bodyComprador.innerHTML = compradoresOrdenados.map(c=>`
+      <tr>
+        <td>${c.nome}</td>
+        <td class="num" style="${c.nome!=='Sem comprador informado'?'cursor:pointer;text-decoration:underline;color:var(--forest);':''}" ${c.nome!=='Sem comprador informado'?`onclick="abrirDetalheComprador('${c.nome.replace(/'/g,"\\'")}')" title="Ver todas as vendas desse comprador"`:''}>${fmtMoney(c.bruto)}</td>
+        <td class="num" style="${c.pago>0?'color:var(--success);font-weight:600;':''}">${c.pago>0?fmtMoney(c.pago):'—'}</td>
+        <td class="num" style="${c.aReceber>0?'color:var(--danger);font-weight:600;':''}">${c.aReceber>0?fmtMoney(c.aReceber):'—'}</td>
+      </tr>
+    `).join('');
+  }
+
+  const container = document.getElementById('vendasGroups');
+  if(groups.length===0){
+    container.innerHTML = '<div class="table-wrap"><table><tbody><tr class="empty-row"><td>Nenhuma venda encontrada.</td></tr></tbody></table></div>';
+    return;
+  }
+  container.innerHTML = groups.map(g=>`
+    <div class="venda-group">
+      <div class="venda-group-header">
+        <span class="venda-group-date">
+          ${g.data}
+          ${g.comprador ? `<span style="display:block;font-family:'Inter',sans-serif;font-size:12.5px;font-weight:500;color:var(--ink-soft);margin-top:2px;">Comprador: ${g.comprador}</span>` : ''}
+        </span>
+        <span style="text-align:right;">
+          <span class="venda-group-total" style="display:block;">${fmtNum(g.total)} mudas vendidas</span>
+          ${g.valorAReceber > 0 ? `<span style="display:block;font-size:12px;font-weight:600;color:var(--danger);margin-top:2px;">A receber: ${fmtMoney(g.valorAReceber)}</span>` : ''}
+          ${g.valorRecebido > 0 ? `<span style="display:block;font-size:12px;font-weight:600;color:var(--success);margin-top:2px;">Recebido: ${fmtMoney(g.valorRecebido)}</span>` : ''}
+        </span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Espécie</th>
+              <th class="num">Qtde vendida</th>
+              <th class="num">Preço/muda</th>
+              <th class="num">Valor</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${g.itens.map(i=>`
+              <tr>
+                <td>${i.especie}</td>
+                <td class="num">${fmtNum(Math.abs(i.qtde))}</td>
+                <td class="num">${i.precoUnitario ? fmtMoney(i.precoUnitario) : '—'}</td>
+                <td class="num">${i.precoUnitario ? fmtMoney(Math.abs(i.qtde)*i.precoUnitario) : '—'}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderNativas(){
+  const busca = buscaNorm(document.getElementById('nativasBusca').value);
+  let list = NATIVAS.slice();
+  if(busca){
+    list = list.filter(n =>
+      buscaNorm(n.familia).includes(busca) ||
+      buscaNorm(n.cientifico).includes(busca) ||
+      buscaNorm(n.sinonimo).includes(busca) ||
+      buscaNorm(n.popular).includes(busca)
+    );
+  }
+  applySort(list, 'nativas');
+
+  document.getElementById('nativasTotal').textContent = `${fmtNum(list.length)} espécie(s) encontrada(s)`;
+
+  const body = document.getElementById('nativasBody');
+  if(list.length===0){
+    body.innerHTML = '<tr class="empty-row"><td colspan="4">Nenhuma espécie encontrada.</td></tr>';
+    updateSortHeaders();
+    return;
+  }
+  body.innerHTML = list.map(n=>`
+    <tr>
+      <td>${n.familia}</td>
+      <td style="font-style:italic;color:var(--ink-soft);">${n.cientifico}</td>
+      <td style="font-style:italic;color:var(--ink-faint);">${n.sinonimo || '—'}</td>
+      <td>${n.popular || '—'}</td>
+    </tr>
+  `).join('');
+  updateSortHeaders();
+}
+
+function renderInvFiltros(){
+  const dados = todosInvestimentosComData();
+  const categorias = uniqueSorted(dados.map(r=>r.categoria));
+  const selCat = document.getElementById('invFiltroCategoria');
+  const currentCat = selCat.value;
+  selCat.innerHTML = '<option value="">Todas as categorias</option>' + categorias.map(c=>`<option value="${c}">${c}</option>`).join('');
+  if(categorias.includes(currentCat)) selCat.value = currentCat;
+
+  const meses = mesesUnicos();
+  const selMes = document.getElementById('invFiltroMes');
+  const currentMes = selMes.value;
+  selMes.innerHTML = '<option value="">Todos os meses</option>' + meses.map(m=>`<option value="${m.label}">${m.label}</option>`).join('');
+  if(meses.some(m=>m.label===currentMes)) selMes.value = currentMes;
+
+  ['resumoFiltroMes','evolucaoFiltroMes'].forEach(id=>{
+    const sel = document.getElementById(id);
+    if(!sel) return;
+    const atual = sel.value;
+    sel.innerHTML = '<option value="">Todos os meses</option>' + meses.map(m=>`<option value="${m.label}">${m.label}</option>`).join('');
+    if(meses.some(m=>m.label===atual)) sel.value = atual;
+  });
+}
+
+function renderInvLancamentos(){
+  const busca = buscaNorm(document.getElementById('invBusca').value);
+  const filtroCategoria = document.getElementById('invFiltroCategoria').value;
+  const filtroMes = document.getElementById('invFiltroMes').value;
+  const agora = new Date();
+
+  let list = computeInvestimentosCorrigidos(agora);
+  if(busca) list = list.filter(r=>buscaNorm(r.referencia).includes(busca) || buscaNorm(r.fornecedor).includes(busca));
+  if(filtroCategoria) list = list.filter(r=>r.categoria===filtroCategoria);
+  if(filtroMes) list = list.filter(r=>mesRef(r.dataObj)===filtroMes);
+
+  list = list.map(r=>({...r, valorCorrigido: r.valorCorrigidoRef}));
+  applySort(list, 'inv');
+
+  const totalValor = list.reduce((s,r)=>s+r.valor,0);
+  document.getElementById('invTotal').textContent = `${fmtNum(list.length)} lançamento(s) — ${fmtMoney(totalValor)} investidos`;
+
+  const footer = document.getElementById('invFooterTotais');
+  footer.innerHTML = `<tr style="font-weight:600;background:var(--moss);">
+    <td colspan="6">Total (${fmtNum(list.length)} lançamento(s))</td>
+    <td class="num">${fmtMoney(totalValor)}</td>
+  </tr>`;
+
+  const body = document.getElementById('invBody');
+  if(list.length===0){
+    body.innerHTML = '<tr class="empty-row"><td colspan="7">Nenhum lançamento encontrado.</td></tr>';
+    updateSortHeaders();
+    return;
+  }
+  body.innerHTML = list.map(r=>`
+    <tr>
+      <td>${r.data}</td>
+      <td>${r.categoria}</td>
+      <td>${r.referencia}${r.nota ? ` <span title="${r.nota.replace(/"/g,'&quot;')}" style="cursor:help;color:var(--clay-dark);font-size:11px;">ⓘ acerto</span>` : ''}</td>
+      <td>${r.fornecedor || '—'}</td>
+      <td>${r.meioPgto || '—'}</td>
+      <td>${origemDe(r)}</td>
+      <td class="num">${fmtMoney(r.valor)}</td>
+    </tr>
+  `).join('');
+  updateSortHeaders();
+}
+
+function efetivoLabelPara(mesesTodos, fimAlvo){
+  let efetivo = null;
+  for(const m of mesesTodos){
+    if(m.fim <= fimAlvo) efetivo = m.label; else break;
+  }
+  return efetivo;
+}
+
+function renderInvResumo(){
+  const mesesTodos = mesesUnicos();
+  const filtroMes = document.getElementById('resumoFiltroMes').value;
+  const meses = filtroMes ? mesesTodos.filter(m=>m.label===filtroMes) : mesesTodos;
+
+  const dados = todosInvestimentosComData();
+  const categorias = uniqueSorted(dados.map(r=>r.categoria));
+
+  // "Investimento Acumulado" e "Custo Total Atualizado" são estados "até agora" — calculados
+  // sempre sobre TODOS os meses reais existentes.
+  let acumuladoBruto = 0;
+  const desembolsadoPorLabel = {};
+  mesesTodos.forEach(m=>{
+    const v = dados.filter(r=>mesRef(r.dataObj)===m.label).reduce((s,r)=>s+r.valor,0);
+    acumuladoBruto += v;
+    desembolsadoPorLabel[m.label] = Math.abs(acumuladoBruto);
+  });
+
+  const financeiroTodos = computeMesesFinanceiro();
+  const financeiroPorLabel = {};
+  financeiroTodos.forEach(f=>{ financeiroPorLabel[f.label] = f; });
+
+  // ---- Plano de Investimentos: uma tabela por ano, sempre com os 12 meses ----
+  const invResumoAnualContainer = document.getElementById('invResumoAnualContainer');
+  if(invResumoAnualContainer && mesesTodos.length){
+    const primeiroFim = mesesTodos[0].fim;
+    const ultimoFim = mesesTodos[mesesTodos.length-1].fim;
+
+    let anos = [];
+    for(let a=primeiroFim.getFullYear(); a<=ultimoFim.getFullYear(); a++) anos.push(a);
+    if(filtroMes){
+      const anoDoFiltro = 2000 + parseInt(filtroMes.slice(-2), 10);
+      anos = anos.filter(a=>a===anoDoFiltro);
+    }
+
+    const acumuladoPorCategoria = {};
+    let acumuladoGeralAnterior = 0;
+
+    const blocosPorAno = anos.map(ano=>{
+      const mesesAno = filtroMes
+        ? mesesTodos.filter(m=>m.label===filtroMes)
+        : MESES_PT.map((mesLabel,i)=>({label:`${mesLabel}/${String(ano).slice(-2)}`, fim: fimDoMes(new Date(ano,i,1))}));
+
+      const linhas = categorias.map(cat=>{
+        let totalAno = 0;
+        const porMes = mesesAno.map(m=>{
+          if(m.fim < primeiroFim || m.fim > ultimoFim) return null;
+          const v = dados.filter(r=>r.categoria===cat && mesRef(r.dataObj)===m.label).reduce((s,r)=>s+r.valor,0);
+          totalAno += v;
+          return v;
+        });
+        if(!acumuladoPorCategoria[cat]) acumuladoPorCategoria[cat] = 0;
+        acumuladoPorCategoria[cat] += totalAno;
+        return {categoria: cat, porMes, totalAno, totalAcumulado: acumuladoPorCategoria[cat]};
+      });
+
+      const totalPorMes = mesesAno.map(m=>{
+        if(m.fim < primeiroFim || m.fim > ultimoFim) return null;
+        return dados.filter(r=>mesRef(r.dataObj)===m.label).reduce((s,r)=>s+r.valor,0);
+      });
+      const totalGeralAno = totalPorMes.reduce((s,v)=>s+(v||0),0);
+      acumuladoGeralAnterior += totalGeralAno;
+
+      const desembolsadoRow = mesesAno.map(m=>{
+        if(m.fim < primeiroFim || m.fim > ultimoFim) return null;
+        const efetivo = efetivoLabelPara(mesesTodos, m.fim);
+        return efetivo ? desembolsadoPorLabel[efetivo] : null;
+      });
+      const desembolsadoValores = desembolsadoRow.filter(v=>v!=null);
+      const desembolsadoAcumuladoAno = desembolsadoValores.length ? desembolsadoValores[desembolsadoValores.length-1] : null;
+
+      const custoRow = mesesAno.map(m=>{
+        if(m.fim < primeiroFim || m.fim > ultimoFim) return null;
+        const efetivo = efetivoLabelPara(mesesTodos, m.fim);
+        return efetivo ? financeiroPorLabel[efetivo].custoAcumulado : null;
+      });
+      const custoValores = custoRow.filter(v=>v!=null);
+      const custoAcumuladoAno = custoValores.length ? custoValores[custoValores.length-1] : null;
+
+      return {ano, mesesAno, linhas, totalPorMes, totalGeralAno, totalGeralAcumulado: acumuladoGeralAnterior, desembolsadoRow, desembolsadoAcumuladoAno, custoRow, custoAcumuladoAno};
+    });
+
+    invResumoAnualContainer.innerHTML = blocosPorAno.slice().reverse().map(b=>{
+      const head = `<tr>
+        <th>Categoria</th>
+        ${b.mesesAno.map(m=>`<th class="num">${m.label}</th>`).join('')}
+        <th class="wrap">Total<br>do ano</th>
+        <th class="wrap">Total<br>acumulado</th>
+      </tr>`;
+      const linhasCategoria = b.linhas.map(l=>`<tr>
+        <td>${l.categoria}</td>
+        ${l.porMes.map(v=>`<td class="num">${v!=null && v!==0 ? fmtMoneyAnual(v) : '—'}</td>`).join('')}
+        <td class="num total-col" style="font-weight:600;">${l.totalAno?fmtMoneyAnual(l.totalAno):'—'}</td>
+        <td class="num total-col" style="font-weight:600;color:var(--forest);">${l.totalAcumulado?fmtMoneyAnual(l.totalAcumulado):'—'}</td>
+      </tr>`).join('');
+      const linhaTotal = `<tr style="font-weight:600;background:var(--moss);">
+        <td>Total</td>
+        ${b.totalPorMes.map(v=>`<td class="num">${v?fmtMoneyAnual(v):'—'}</td>`).join('')}
+        <td class="num total-col">${fmtMoneyAnual(b.totalGeralAno)}</td>
+        <td class="num total-col">${fmtMoneyAnual(b.totalGeralAcumulado)}</td>
+      </tr>`;
+      const linhaDesembolsado = `<tr style="font-weight:600;">
+        <td>Investimento Acumulado</td>
+        ${b.desembolsadoRow.map(v=>`<td class="num">${v!=null?fmtMoneyAnual(v):'—'}</td>`).join('')}
+        <td class="num total-col">—</td>
+        <td class="num total-col">${b.desembolsadoAcumuladoAno!=null?fmtMoneyAnual(b.desembolsadoAcumuladoAno):'—'}</td>
+      </tr>`;
+      const linhaCusto = `<tr style="font-weight:600;color:var(--forest);border-top:2px solid var(--moss-line);">
+        <td>Custo Total Atualizado</td>
+        ${b.custoRow.map(v=>`<td class="num">${v!=null?fmtMoneyAnual(v):'—'}</td>`).join('')}
+        <td class="num total-col">—</td>
+        <td class="num total-col">${b.custoAcumuladoAno!=null?fmtMoneyAnual(b.custoAcumuladoAno):'—'}</td>
+      </tr>`;
+      return `
+        <div class="section-title" style="margin-top:32px;">Plano de Investimentos — ${b.ano}</div>
+        <div class="table-wrap">
+          <table class="resumo-anual">
+            <thead>${head}</thead>
+            <tbody>${linhasCategoria}</tbody>
+            <tfoot>${linhaTotal}${linhaDesembolsado}${linhaCusto}</tfoot>
+          </table>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ---- Extrato: Evolução do Custo Total Acumulado ----
+  const extratoBody = document.getElementById('extratoCustoAcumuladoBody');
+  if(extratoBody){
+    const linhasExtrato = meses.map(m=>{
+      const f = financeiroPorLabel[m.label];
+      return `<tr>
+        <td>${m.label}</td>
+        <td class="num">${fmtMoney(f.custoAcumuladoInicial)}</td>
+        <td class="num">${fmtMoney(f.correcaoFinanceira)}</td>
+        <td class="num">${f.investimentoNoMes>0?fmtMoney(f.investimentoNoMes):'—'}</td>
+        <td class="num" style="color:var(--danger);">${f.abatimento>0?'− '+fmtMoney(f.abatimento):'—'}</td>
+        <td class="num" style="font-weight:600;color:var(--forest);">${fmtMoney(f.custoAcumulado)}</td>
+      </tr>`;
+    });
+    extratoBody.innerHTML = linhasExtrato.join('');
+
+    const extratoFooter = document.getElementById('extratoCustoAcumuladoFooter');
+    if(extratoFooter){
+      const totalCorrecao = meses.reduce((s,m)=>s+financeiroPorLabel[m.label].correcaoFinanceira,0);
+      const totalInvestimento = meses.reduce((s,m)=>s+financeiroPorLabel[m.label].investimentoNoMes,0);
+      const totalAbatimento = meses.reduce((s,m)=>s+financeiroPorLabel[m.label].abatimento,0);
+      extratoFooter.innerHTML = `<tr style="font-weight:600;background:var(--moss);">
+        <td>Total</td>
+        <td class="num"></td>
+        <td class="num">${fmtMoney(totalCorrecao)}</td>
+        <td class="num">${totalInvestimento>0?fmtMoney(totalInvestimento):'—'}</td>
+        <td class="num" style="color:var(--danger);">${totalAbatimento>0?'− '+fmtMoney(totalAbatimento):'—'}</td>
+        <td class="num"></td>
+      </tr>`;
+    }
+  }
+}
+
+function attachRendimentoCaixaInputListeners(container){
+  container.querySelectorAll('input[data-mes-rendimento]').forEach(input=>{
+    input.addEventListener('change', async ()=>{
+      const mes = input.dataset.mesRendimento;
+      const valor = parseMoneyInput(input.value);
+      input.value = fmtMoneyInput(valor);
+      rendimentoCaixaDados[mes] = valor;
+      await saveRendimentoCaixa();
+      renderEvolucaoContaCapital();
+    });
+  });
+}
+
+function renderEvolucaoContaCapital(){
+  const body = document.getElementById('evolContaCapitalBody');
+  if(!body) return;
+
+  const mesesTodos = mesesUnicos();
+  const filtroMes = document.getElementById('evolucaoFiltroMes').value;
+  const meses = filtroMes ? mesesTodos.filter(m=>m.label===filtroMes) : mesesTodos;
+
+  const dadosTodos = computeEvolucaoContaCapital();
+  const porLabel = {};
+  dadosTodos.forEach(f=>{ porLabel[f.label] = f; });
+
+  body.innerHTML = meses.map(m=>{
+    const f = porLabel[m.label];
+    return `<tr>
+      <td>${m.label}</td>
+      <td class="num" style="font-weight:600;color:var(--forest);">${fmtMoney(f.contaPara)}${f.eCadeia?' <span title="calculado em cadeia a partir do saldo do mês anterior" style="cursor:help;">↻</span>':''}</td>
+      <td class="num" style="font-weight:600;color:var(--clay-dark);">${f.contaViveiro>0?fmtMoney(f.contaViveiro):'—'}</td>
+      <td class="num">${f.caixaViveiro>0?fmtMoney(f.caixaViveiro):'—'}</td>
+    </tr>`;
+  }).join('');
+
+  // ---- Extrato: Caixa do Viveiro ----
+  const extratoCaixaBody = document.getElementById('extratoCaixaViveiroBody');
+  if(extratoCaixaBody){
+    extratoCaixaBody.innerHTML = meses.map(m=>{
+      const f = porLabel[m.label];
+      const editavel = mesEhEditavel(f.fim);
+      return `<tr>
+        <td>${m.label}</td>
+        <td class="num">${fmtMoney(f.caixaViveiroInicial)}</td>
+        <td class="num">${f.recebimentosMes>0?fmtMoney(f.recebimentosMes):'—'}</td>
+        <td class="num" style="color:var(--danger);">${f.investimentosViveiroMes>0?'− '+fmtMoney(f.investimentosViveiroMes):'—'}</td>
+        <td class="num" style="color:var(--danger);">${f.amortizacoesMes>0?'− '+fmtMoney(f.amortizacoesMes):'—'}</td>
+        <td class="num">
+          ${editavel
+            ? `<span style="white-space:nowrap;"><span style="color:var(--ink-faint);font-size:12px;">R$</span> <input type="text" inputmode="decimal" data-mes-rendimento="${m.label}" value="${fmtMoneyInput(f.rendimentoMes)}" style="width:90px;text-align:right;padding:4px 6px;font-size:12.5px;"></span>`
+            : `<span title="Valor histórico, não editável">${f.rendimentoMes?fmtMoney(f.rendimentoMes):'—'}</span>`}
+          <span class="print-value">${fmtMoneyInput(f.rendimentoMes)}</span>
+        </td>
+        <td class="num" style="font-weight:600;">${fmtMoney(f.caixaViveiro)}</td>
+      </tr>`;
+    }).join('');
+    attachRendimentoCaixaInputListeners(extratoCaixaBody);
+  }
+
+  // ---- Extrato: Conta Capital Viveiro ----
+  const extratoCapitalBody = document.getElementById('extratoCapitalViveiroBody');
+  if(extratoCapitalBody){
+    extratoCapitalBody.innerHTML = meses.map(m=>{
+      const f = porLabel[m.label];
+      return `<tr>
+        <td>${m.label}</td>
+        <td class="num">${fmtMoney(f.contaViveiroInicial)}</td>
+        <td class="num">${f.investimentosViveiroMes>0?fmtMoney(f.investimentosViveiroMes):'—'}</td>
+        <td class="num" style="font-weight:600;color:var(--clay-dark);">${fmtMoney(f.contaViveiro)}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  // ---- Extrato: Conta Capital Pará ----
+  const extratoParaBody = document.getElementById('extratoCapitalParaBody');
+  if(extratoParaBody){
+    extratoParaBody.innerHTML = meses.map(m=>{
+      const f = porLabel[m.label];
+      return `<tr>
+        <td>${m.label}</td>
+        <td class="num">${fmtMoney(f.contaParaInicial)}</td>
+        <td class="num">${fmtMoney(f.correcaoJurosPara)}</td>
+        <td class="num">${f.aportesParaMes>0?fmtMoney(f.aportesParaMes):'—'}</td>
+        <td class="num" style="color:var(--danger);">${f.amortizacoesMes>0?'− '+fmtMoney(f.amortizacoesMes):'—'}</td>
+        <td class="num" style="font-weight:600;color:var(--forest);">${fmtMoney(f.contaPara)}</td>
+      </tr>`;
+    }).join('');
+  }
+}
+
+function attachCustoInputListeners(container){
+  container.querySelectorAll('input[data-mes]').forEach(input=>{
+    input.addEventListener('change', async ()=>{
+      const mes = input.dataset.mes;
+      const campo = input.dataset.campo;
+      if(!custoUnitarioDados[mes]) custoUnitarioDados[mes] = {valoresAPagar:0, mudasInventariadas:0, perdidas:0, plantadas:0};
+      let valor;
+      if(campo === 'mudasInventariadas' || campo === 'plantadas' || campo === 'perdidas'){
+        valor = parseIntInput(input.value);
+        input.value = fmtIntInput(valor);
+      } else {
+        valor = parseMoneyInput(input.value);
+        input.value = fmtMoneyInput(valor);
+      }
+      custoUnitarioDados[mes][campo] = valor;
+      await saveCustoUnitario();
+      renderCustoUnitario();
+      renderInvResumo();
+    });
+  });
+}
+
+function renderCustoUnitario(){
+  const body = document.getElementById('custoUnitarioBody');
+  const financeiro = computeMesesFinanceiro();
+
+  body.innerHTML = financeiro.map(f=>{
+    const editavel = mesEhEditavel(f.fim);
+    return `
+      <tr>
+        <td>${f.label}${f.eCadeia?' <span title="calculado em cadeia a partir do saldo do mês anterior" style="cursor:help;color:var(--ink-faint);">↻</span>':''}</td>
+        <td class="num">${fmtMoney(f.custoAcumulado)}</td>
+        <td class="num">
+          ${editavel
+            ? `<span style="white-space:nowrap;"><span style="color:var(--ink-faint);font-size:12px;">R$</span> <input type="text" inputmode="decimal" data-mes="${f.label}" data-campo="valoresAPagar" value="${fmtMoneyInput(f.valoresAPagar)}" style="width:100px;text-align:right;padding:4px 6px;font-size:12.5px;"></span>`
+            : `<span title="Valor histórico, não editável">${f.valoresAPagar?fmtMoney(f.valoresAPagar):'—'}</span>`}
+          <span class="print-value">${fmtMoneyInput(f.valoresAPagar)}</span>
+        </td>
+        <td class="num" style="font-weight:600;">${fmtMoney(f.custoTotal)}</td>
+        <td class="num" title="Calculado na aba Estoque de Mudas">${f.mudasVendidasNoMes?fmtNum(Math.round(f.mudasVendidasNoMes)):'—'}</td>
+        <td class="num" title="Editável na aba Estoque de Mudas">${f.mudasPlantadas?fmtNum(f.mudasPlantadas):'—'}</td>
+        <td class="num" title="Editável na aba Estoque de Mudas">${f.mudasPerdidas?fmtNum(f.mudasPerdidas):'—'}</td>
+        <td class="num" style="font-weight:600;" title="Calculado na aba Estoque de Mudas">${fmtNum(Math.round(f.mudasInventariadas))}</td>
+        <td class="num" style="font-weight:600;color:var(--forest);">${f.mudasInventariadas ? fmtMoney(f.custoUnitario) : '—'}</td>
+      </tr>
+  `;}).join('');
+
+  attachCustoInputListeners(body);
+}
+
+function renderInvestimentos(){
+  renderInvFiltros();
+  renderInvLancamentos();
+  renderInvResumo();
+  renderCustoUnitario();
+  renderEstoqueMudas();
+  renderEvolucaoContaCapital();
+}
+
+function renderAll(){
+  renderSummary();
+  renderEstoqueFiltros();
+  renderEstoque();
+  renderMovimentacoes();
+  renderEspFiltros();
+  renderEspecies();
+  renderInteresse();
+  renderVendasFiltros();
+  renderVendas();
+  renderNativas();
+  renderInvestimentos();
+}
+
+// Tabs
+document.getElementById('tabs').addEventListener('click', (e)=>{
+  const btn = e.target.closest('.tab');
+  if(!btn) return;
+  document.querySelectorAll('#tabs > .tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.app > .panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('panel-'+btn.dataset.tab).classList.add('active');
+});
+
+// Filters
+document.getElementById('estoqueBusca').addEventListener('input', renderEstoque);
+document.getElementById('estoqueFiltroSitio').addEventListener('change', ()=>{
+  document.getElementById('estoqueFiltroLote').value = '';
+  renderEstoqueFiltros();
+  renderEstoque();
+});
+document.getElementById('estoqueFiltroLote').addEventListener('change', renderEstoque);
+document.getElementById('estoqueFiltroDap').addEventListener('change', renderEstoque);
+document.getElementById('estoqueFiltroHotlist').addEventListener('change', renderEstoque);
+document.getElementById('modalOverlay').addEventListener('click', (e)=>{
+  if(e.target.id === 'modalOverlay') fecharModal();
+});
+
+document.getElementById('estoqueFiltroSaidas').addEventListener('change', renderEstoque);
+document.getElementById('movBusca').addEventListener('input', renderMovimentacoes);
+document.getElementById('movFiltroEvento').addEventListener('change', renderMovimentacoes);
+document.getElementById('espBusca').addEventListener('input', renderEspecies);
+document.getElementById('espFiltroSitio').addEventListener('change', ()=>{
+  document.getElementById('espFiltroLote').value = '';
+  renderEspFiltros();
+  renderEspecies();
+});
+document.getElementById('espFiltroLote').addEventListener('change', renderEspecies);
+document.getElementById('espFiltroDap').addEventListener('change', renderEspecies);
+document.getElementById('espFiltroHotlist').addEventListener('change', renderEspecies);
+document.getElementById('interesseBusca').addEventListener('input', renderInteresse);
+document.getElementById('interesseFiltroStatus').addEventListener('change', renderInteresse);
+document.getElementById('vendasBusca').addEventListener('input', renderVendas);
+document.getElementById('vendasFiltroComprador').addEventListener('change', renderVendas);
+document.getElementById('vendasFiltroData').addEventListener('change', renderVendas);
+document.getElementById('vendasDataReferencia').addEventListener('change', renderVendas);
+document.getElementById('vendasDataReferenciaReset').addEventListener('click', ()=>{
+  const hoje = new Date();
+  document.getElementById('vendasDataReferencia').value = `${hoje.getFullYear()}-${String(hoje.getMonth()+1).padStart(2,'0')}-${String(hoje.getDate()).padStart(2,'0')}`;
+  renderVendas();
+});
+document.getElementById('nativasBusca').addEventListener('input', renderNativas);
+
+document.getElementById('invBusca').addEventListener('input', renderInvLancamentos);
+document.getElementById('invFiltroCategoria').addEventListener('change', renderInvLancamentos);
+document.getElementById('invFiltroMes').addEventListener('change', renderInvLancamentos);
+document.getElementById('resumoFiltroMes').addEventListener('change', renderInvResumo);
+document.getElementById('evolucaoFiltroMes').addEventListener('change', renderEvolucaoContaCapital);
+
+
+
+document.getElementById('invSubTabs').addEventListener('click', (e)=>{
+  const btn = e.target.closest('.tab');
+  if(!btn) return;
+  document.querySelectorAll('#invSubTabs .tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('#panel-investimentos > .panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('invpanel-'+btn.dataset.invtab).classList.add('active');
+});
+
+function aplicarModoCliente(){
+  const params = new URLSearchParams(window.location.search);
+  if(params.get('modo') !== 'cliente') return;
+
+  document.title = 'Viveiro de Mudas';
+  const heroTitle = document.getElementById('heroTitle');
+  if(heroTitle) heroTitle.textContent = 'Viveiro de Mudas';
+
+  // esconde abas sensíveis (só ficam visíveis Estoque e Espécies Nativas)
+  const abasEscondidas = ['movimentacoes','vendas','interesse','especies','investimentos'];
+  abasEscondidas.forEach(tab=>{
+    const btn = document.querySelector(`.tab[data-tab="${tab}"]`);
+    if(btn) btn.style.display = 'none';
+    const panel = document.getElementById('panel-'+tab);
+    if(panel) panel.style.display = 'none';
+  });
+
+  // se a aba ativa for uma das escondidas, volta pro Estoque
+  const ativo = document.querySelector('.tab.active');
+  if(ativo && abasEscondidas.includes(ativo.dataset.tab)){
+    ativo.classList.remove('active');
+    const estoqueBtn = document.querySelector('.tab[data-tab="estoque"]');
+    const estoquePanel = document.getElementById('panel-estoque');
+    if(estoqueBtn) estoqueBtn.classList.add('active');
+    if(estoquePanel) estoquePanel.classList.add('active');
+  }
+
+  // no cabeçalho, só fica visível o grupo "Informações gerais"
+  document.querySelectorAll('.summary-group-title').forEach(el=>{
+    if(el.textContent.trim() !== 'Informações gerais'){
+      el.style.display = 'none';
+      if(el.nextElementSibling) el.nextElementSibling.style.display = 'none';
+    }
+  });
+}
+
+(async function init(){
+  try{
+    await loadData();
+  }catch(e){
+    console.error('Erro na inicialização, usando dados padrão', e);
+    movimentacoes = SEED.slice();
+  }
+  try{
+    await loadCustoUnitario();
+  }catch(e){
+    console.error('Erro ao carregar custo unitário', e);
+  }
+  try{
+    await loadInvestimentosExtras();
+  }catch(e){
+    console.error('Erro ao carregar lançamentos extras', e);
+  }
+  try{
+    await loadEstoqueMudas();
+  }catch(e){
+    console.error('Erro ao carregar estoque de mudas', e);
+  }
+  try{
+    await loadRendimentoCaixa();
+  }catch(e){
+    console.error('Erro ao carregar rendimento do caixa', e);
+  }
+  try{
+    await loadDap();
+  }catch(e){
+    console.error('Erro ao carregar classificação DAP', e);
+  }
+  try{
+    await loadPagamentos();
+  }catch(e){
+    console.error('Erro ao carregar pagamentos', e);
+  }
+  renderAll();
+  aplicarModoCliente();
+})();
+
+</script>
+</body>
+</html>
